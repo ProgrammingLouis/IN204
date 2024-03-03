@@ -1,6 +1,9 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+#include <chrono>
+#include "screenObject.hpp"
+
 int main()
 {
     // Print SFML version
@@ -25,12 +28,27 @@ int main()
     // secondWindow.setFramerateLimit(144);
     secondWindow.setVerticalSyncEnabled(true);
 
+    // Load texture
+    sf::Texture texture;
+    if (!texture.loadFromFile("imgs/SFML.png"))
+    {
+        std::cerr << "Error loading texture 'imgs/SFML.png'" << std::endl;
+        return 1;
+    }
+    texture.setSmooth(true);
+
+    // Create a sprite
+    auto sprite = sf::Sprite(texture);
+    sprite.setTexture(texture);
+
+
     // Create a green circle
     auto circle = sf::CircleShape(100);
-    circle.setOrigin(circle.getRadius(), circle.getRadius());
     circle.setFillColor(sf::Color::Green);
-    int circleX = 500;
-    int circleY = 500;
+    auto screenObject1 = ScreenObject(sf::Vector2f(500, 500), circle); 
+
+    // Create a screen object
+    auto screenObject2 = ScreenObject(sf::Vector2f(500, 200), circle);
 
 
 
@@ -48,13 +66,26 @@ int main()
     //     mainWindow.display();
     // }
 
+    std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
+    float deltaTime = 0.0f;
+
     while (mainWindow.isOpen() || secondWindow.isOpen())
     {
+        auto now = std::chrono::steady_clock::now();
+        deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime).count()*100.0f;
+        lastTime = now;
+
+        // std::cout << "Delta time: " << deltaTime << std::endl;
+
+        screenObject2.sreenPosition.x += 1 * deltaTime;
+
         for (auto event = sf::Event{}; mainWindow.pollEvent(event);)
         {
             if (event.type == sf::Event::Closed)
             {
                 mainWindow.close();
+            } else if (event.type == sf::Event::Resized) {
+                mainWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
             }
         }
 
@@ -63,6 +94,8 @@ int main()
             if (event.type == sf::Event::Closed)
             {
                 secondWindow.close();
+            } else if (event.type == sf::Event::Resized) {
+                secondWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
             }
         }
 
@@ -70,10 +103,9 @@ int main()
         {
             mainWindow.clear();
             
-            sf::Vector2i winPos = mainWindow.getPosition();
-            circle.setPosition(circleX-winPos.x, circleY-winPos.y);
 
-            mainWindow.draw(circle);
+            screenObject1.draw(mainWindow);
+            screenObject2.draw(mainWindow);
 
             mainWindow.display();
         }
@@ -81,13 +113,13 @@ int main()
         {
             secondWindow.clear();
 
-            sf::Vector2i winPos = secondWindow.getPosition();
-            circle.setPosition(circleX-winPos.x, circleY-winPos.y);
+            screenObject1.draw(secondWindow);
+            screenObject2.draw(secondWindow);
 
-            secondWindow.draw(circle);
 
             secondWindow.display();
         }
+
     }
 
 
