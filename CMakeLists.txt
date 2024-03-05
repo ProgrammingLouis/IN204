@@ -14,6 +14,9 @@ add_executable(CMakeSFMLProject src/main.cpp)
 target_link_libraries(CMakeSFMLProject PRIVATE sfml-graphics)
 target_compile_features(CMakeSFMLProject PRIVATE cxx_std_17)
 
+find_package(box2d CONFIG REQUIRED)
+target_link_libraries(CMakeSFMLProject PRIVATE box2d::box2d)
+
 if(WIN32)
     add_custom_command(
         TARGET CMakeSFMLProject

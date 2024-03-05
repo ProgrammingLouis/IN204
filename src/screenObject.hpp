@@ -12,21 +12,33 @@ These objects will typically be able to move throw different windows on screen
 
 #include <iostream>
 
-
+template <typename ShapeType>
 class ScreenObject
 {
     public:
         sf::Vector2f sreenPosition;
         sf::Vector2f posOnWin;
         //! The circle shape has to have its origin as default for visibility box to work
-        sf::CircleShape circle;
+        ShapeType shape;
         sf::Vector2f visibilityBox;
 
     
-        ScreenObject(const sf::Vector2f& position, sf::CircleShape circle) : sreenPosition(position), posOnWin(0, 0), circle(circle)
+        ScreenObject(const sf::Vector2f& position, ShapeType shape) : sreenPosition(position), posOnWin(0, 0), shape(shape)
         {
             // circle.setOrigin(circle.getRadius(), circle.getRadius());
-            visibilityBox = sf::Vector2f(circle.getRadius() * 2, circle.getRadius() * 2);
+            // To create the visibility box, use getRadius() if the shape is a circle and getSize() if it is a rectangle
+            if constexpr (std::is_same<ShapeType, sf::CircleShape>::value)
+            {
+                visibilityBox = sf::Vector2f(shape.getRadius(), shape.getRadius());
+            }
+            else if constexpr (std::is_same<ShapeType, sf::RectangleShape>::value)
+            {
+                visibilityBox = shape.getSize();
+            }
+            else
+            {
+                std::cerr << "Shape type not supported" << std::endl;
+            }
         }
         virtual ~ScreenObject() = default;
 
@@ -41,8 +53,8 @@ class ScreenObject
             if (posOnWin.x + visibilityBox.x > 0 && posOnWin.x < winSize.x && posOnWin.y + visibilityBox.y > 0 && posOnWin.y < winSize.y)
             {
                 // std::cout << "Drawing object at: " << posOnWin.x << ", " << posOnWin.y << std::endl;
-                circle.setPosition(posOnWin);
-                window.draw(circle);
+                shape.setPosition(posOnWin);
+                window.draw(shape);
             }
             // } else std::cout << "Object not visible" << std::endl;
         };
