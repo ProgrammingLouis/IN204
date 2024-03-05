@@ -8,6 +8,11 @@
 #include <chrono>
 #include "screenObject.hpp"
 #include "boxes.hpp"
+#include "circles.hpp"
+#include "window.hpp"
+
+#include <SFML/Window/Mouse.hpp>
+
 
 int main()
 {
@@ -28,14 +33,16 @@ int main()
     auto windowsSettings = sf::ContextSettings();
     windowsSettings.antialiasingLevel = 8;
     
-    
-    auto mainWindow = sf::RenderWindow(mainWindowVideoMode, "SFML works!", sf::Style::Default, windowsSettings);
-    // mainWindow.setFramerateLimit(144);
+    auto mainWindow = MyWindow(mainWindowVideoMode, "SFML works!", sf::Style::Default, windowsSettings);
+    // mainWindow.setFramerateLimit(0);
     mainWindow.setVerticalSyncEnabled(true);
+    mainWindow.setPosition(sf::Vector2i(10, 0));
 
-    auto secondWindow = sf::RenderWindow(mainWindowVideoMode, "Second window", sf::Style::Default, windowsSettings);
-    // secondWindow.setFramerateLimit(144);
+
+    auto secondWindow = MyWindow(mainWindowVideoMode, "Second window", sf::Style::Default, windowsSettings);
+    // secondWindow.setFramerateLimit(0);
     secondWindow.setVerticalSyncEnabled(true);
+    secondWindow.setPosition(sf::Vector2i(400, 300));
 
     // Load texture
     sf::Texture texture;
@@ -49,25 +56,6 @@ int main()
     // Create a sprite
     auto sprite = sf::Sprite(texture);
     sprite.setTexture(texture);
-
-
-    // Create a green circle
-    auto circle1 = sf::CircleShape(10);
-    circle1.setFillColor(sf::Color::Green);
-    auto screenObject1 = ScreenObject(sf::Vector2f(500, 500), circle1); 
-
-    // Create a screen object
-    auto circle = sf::CircleShape(50);
-    circle.setFillColor(sf::Color::Red);
-    auto screenObject2 = ScreenObject(sf::Vector2f(500, 200), circle);
-
-    // Create a box screen object
-    int boxSize = 50;
-    auto box = sf::RectangleShape(sf::Vector2f(boxSize, boxSize));
-    box.setFillColor(sf::Color::Blue);
-    auto boxScreenObject = ScreenObject(sf::Vector2f(500, 200), box);
-
-    // box.setOrigin(2*boxSize, 2*boxSize);
 
 
     /* #region Box2D Init */
@@ -84,47 +72,25 @@ int main()
     int32 positionIterations = 3;
 
     /* #endregion */
-
-    b2BodyDef groundBodyDef;
-    groundBodyDef.position.Set(250.0f, 20.0f);
-
-    b2Body* groundBody = world.CreateBody(&groundBodyDef);
-
-    b2PolygonShape groundBox;
-    groundBox.SetAsBox(100.0f, 10.0f);
-
-    groundBody->CreateFixture(&groundBox, 0.0f);
-    
-
-
-
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.position.Set(360.0f, desktopVideoMode.height/2/pixPerMeter);
-    // bodyDef.angularVelocity = 4.0f;
-    b2Body* body = world.CreateBody(&bodyDef);
-
-    b2PolygonShape dynamicBox;
-    // dynamicBox.SetAsBox(boxSize/pixPerMeter, boxSize/pixPerMeter);
-    dynamicBox.SetAsBox(5, 5);
-
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &dynamicBox;
-    fixtureDef.density = 10.0f;
-    fixtureDef.friction = 0.3f;
-
-    body->CreateFixture(&fixtureDef);
-
     
     // new box
-    MyDynamicBox box1(sf::Vector2f(550, 400), sf::Vector2f(25, 25), world, pixPerMeter);
+    MyDynamicBox dynamicBox1(sf::Vector2f(540, 400), sf::Vector2f(25, 25), world, pixPerMeter);
 
-    MyStaticBox staticBox1(sf::Vector2f(500, 500), sf::Vector2f(50, 10), world, pixPerMeter);
+    MyStaticBox staticBox1(sf::Vector2f(500, 500), sf::Vector2f(50, 20), world, pixPerMeter);
+
+    MyDynamicCircle circle2(sf::Vector2f(540, 300), 20, world, pixPerMeter);
+
+    MyWindowKinematicBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, secondWindow);
 
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     float deltaTime = 0.0f;
+
+    sf::Vector2i mousePos = sf::Mouse::getPosition();
+    sf::Vector2i mouseStartDragPos;
+    sf::Vector2i secondWindowPos = secondWindow.getPosition();
+
 
     while (mainWindow.isOpen() || secondWindow.isOpen())
     {
@@ -132,47 +98,72 @@ int main()
         deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime).count()*100.0f;
         lastTime = now;
 
+
+        // SetTransform version
+        windowStaticBox1.body->SetAwake(true);
+        windowStaticBox1.body->SetTransform(b2Vec2((secondWindow.getPosition().x+windowStaticBox1.posOnAttachedWin.x)/pixPerMeter, (secondWindow.getPosition().y+windowStaticBox1.posOnAttachedWin.y)/pixPerMeter), 0);
+        
+        // // Applying forces towards new position version
+        // windowStaticBox1.body->SetAwake(true);
+        // windowStaticBox1.body->ApplyForceToCenter(b2Vec2(((secondWindow.getPosition().x+windowStaticBox1.winPosition.x)/pixPerMeter - windowStaticBox1.body->GetPosition().x)*1000.0f, ((secondWindow.getPosition().y+windowStaticBox1.winPosition.y)/pixPerMeter - windowStaticBox1.body->GetPosition().y)*1000.0f), true);
+
+        
+        
+        // std::cout << "Setting simulation position: " << (secondWindow.getPosition().x+windowStaticBox1.winPosition.x)/pixPerMeter << ", " << (secondWindow.getPosition().y+windowStaticBox1.winPosition.y)/pixPerMeter << std::endl;
+
         world.Step(timeStep, velocityIterations, positionIterations);
 
         // std::cout << "Delta time: " << deltaTime << std::endl;
 
-        boxScreenObject.sreenPosition = sf::Vector2f(body->GetPosition().x*pixPerMeter-boxSize/2, body->GetPosition().y * pixPerMeter-boxSize/2);
-        boxScreenObject.shape.setRotation(body->GetAngle() * 180 / b2_pi);
+        // boxScreenObject.sreenPosition = sf::Vector2f(body->GetPosition().x*pixPerMeter-boxSize/2, body->GetPosition().y * pixPerMeter-boxSize/2);
+        // boxScreenObject.shape.setRotation(body->GetAngle() * 180 / b2_pi);
         // std::cout << "Simulation position: " << body->GetPosition().x << ", " << body->GetPosition().y << std::endl;
         // std::cout << "Screen position: " << boxScreenObject.sreenPosition.x << ", " << boxScreenObject.sreenPosition.y << std::endl;
 
-        screenObject2.sreenPosition.x += 1 * deltaTime;
+        // screenObject2.sreenPosition.x += 1 * deltaTime;
 
-        for (auto event = sf::Event{}; mainWindow.pollEvent(event);)
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                mainWindow.close();
-            } else if (event.type == sf::Event::Resized) {
-                mainWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-            }
-        }
+        // for (auto event = sf::Event{}; mainWindow.pollEvent(event);)
+        // {
+        //     if (event.type == sf::Event::Closed)
+        //     {
+        //         mainWindow.close();
+        //     } else if (event.type == sf::Event::Resized) {
+        //         mainWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+        //     }
+        // }
 
-        for (auto event = sf::Event{}; secondWindow.pollEvent(event);)
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                secondWindow.close();
-            } else if (event.type == sf::Event::Resized) {
-                secondWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-            }
-        }
+        // for (auto event = sf::Event{}; secondWindow.pollEvent(event);)
+        // {
+        //     if (event.type == sf::Event::Closed)
+        //     {
+        //         secondWindow.close();
+        //     } else if (event.type == sf::Event::Resized) {
+        //         secondWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+        //     } else if (event.type == sf::Event::MouseButtonPressed) {
+        //         if (event.mouseButton.button != sf::Mouse::Button::Left) continue;
+        //         mouseStartDragPos = sf::Mouse::getPosition();
+        //         // std::cout << "Mouse button pressed " << event.mouseButton.button << " at " << event.mouseButton.x << ", " << event.mouseButton.y << std::endl;
+        //     } 
+        // }
+
+        /* #region Windows update */
+        mainWindow.pollEvents();
+        secondWindow.pollEvents();
+
+        mainWindow.updatePosition();
+        secondWindow.updatePosition();
+        /* #endregion */
 
         if (mainWindow.isOpen())
         {
             mainWindow.clear();
-            
 
-            screenObject1.draw(mainWindow);
-            screenObject2.draw(mainWindow);
             // boxScreenObject.draw(mainWindow);
-            box1.draw(mainWindow, pixPerMeter);
-            staticBox1.draw(mainWindow, pixPerMeter);
+            dynamicBox1.draw(mainWindow, pixPerMeter);
+            staticBox1.draw(mainWindow, mainWindow.getPosition(), pixPerMeter);
+            circle2.draw(mainWindow, pixPerMeter);
+
+            windowStaticBox1.draw(mainWindow, pixPerMeter);
 
             mainWindow.display();
         }
@@ -180,12 +171,12 @@ int main()
         {
             secondWindow.clear();
 
-            screenObject1.draw(secondWindow);
-            screenObject2.draw(secondWindow);
             // boxScreenObject.draw(secondWindow);
-            box1.draw(secondWindow, pixPerMeter);
-            staticBox1.draw(secondWindow, pixPerMeter);
+            dynamicBox1.draw(secondWindow, pixPerMeter);
+            staticBox1.draw(secondWindow, secondWindow.getPosition(), pixPerMeter);
+            circle2.draw(secondWindow, pixPerMeter);
 
+            windowStaticBox1.draw(secondWindow, pixPerMeter);
 
             secondWindow.display();
         }
