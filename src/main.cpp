@@ -6,11 +6,15 @@
 // #include "/usr/local/include/box2d/box2d.h"
 
 #include <chrono>
+
+// Local includes
 #include "boxes.hpp"
 #include "circles.hpp"
 #include "window.hpp"
 #include "finish.hpp"
+#include "levels_data.hpp"
 
+// For desktop mouse position
 #include <SFML/Window/Mouse.hpp>
 
 
@@ -33,17 +37,56 @@ int main()
     
     auto windowsSettings = sf::ContextSettings();
     windowsSettings.antialiasingLevel = 8;
+
+    int currentLevel = 1;
+
+    // std::vector<MyWindow&> windows(level1::numberOfWindows);
+
+    std::vector<MyWindow*> windows;
+
+
+    //!! For some really strange I get a segmentation fault when I try to create the windows in a loop
+    // Why ?
+
+    // for (int windowID = 0; windowID < level1::numberOfWindows; windowID++)
+    // {
+
+    //     auto thisWindow = MyWindow(mainWindowVideoMode, "Window", sf::Style::None, windowsSettings);
+    //     thisWindow.setVerticalSyncEnabled(true);
+    //     if (windowID == 0) thisWindow.setPosition(sf::Vector2i(10, 0));
+    //     else thisWindow.setPosition(sf::Vector2i(400, 300));
+    //     // thisWindow.setPosition(sf::Vector2i(10, 0));
+    //     windows.push_back(&thisWindow);
+    //     std::cout << "Window " << windowID << " created" << std::endl;
+    //     // windows[windowID].create(level1::videoModes[windowID], "Window "+std::to_string(windowID), sf::Style::None, windowsSettings);
+    //     // windows[windowID].setVerticalSyncEnabled(true);
+    //     // windows[windowID].setPosition(level1::windowPositions[windowID]);
+    // }
     
-    auto mainWindow = MyWindow(mainWindowVideoMode, "MainWindow", sf::Style::Titlebar, windowsSettings);
+    // std::vector<MyWindow*> windows;
+
+    // std::cout << "Number of windows: " << windows.size() << std::endl;
+    // for (auto& window : windows)
+    // {
+    //     window->create(mainWindowVideoMode, "Window", sf::Style::None, windowsSettings);
+    // }
+    // std::cout << "All windows polled" << std::endl;
+
+    auto window = MyWindow(level1::videoModes[0], "MainWindow", sf::Style::None, windowsSettings);
     // mainWindow.setFramerateLimit(0);
-    mainWindow.setVerticalSyncEnabled(true);
-    mainWindow.setPosition(sf::Vector2i(10, 0));
+    window.setVerticalSyncEnabled(true);
+    window.setPosition(level1::windowPositions[0]);
+    windows.push_back(&window);
 
 
-    auto secondWindow = MyWindow(mainWindowVideoMode, "Second window", sf::Style::Titlebar, windowsSettings);
+
+    auto window1 = MyWindow(level1::videoModes[1], "Second window", sf::Style::None, windowsSettings);
     // secondWindow.setFramerateLimit(0);
-    secondWindow.setVerticalSyncEnabled(true);
-    secondWindow.setPosition(sf::Vector2i(400, 300));
+    window1.setVerticalSyncEnabled(true);
+    window1.setPosition(level1::windowPositions[1]);
+    windows.push_back(&window1);
+
+    // std::vector<MyWindow*> windows = {&mainWindow, &secondWindow};
 
     // Load texture
     sf::Texture texture;
@@ -85,87 +128,52 @@ int main()
     MyDynamicCircle circle2(sf::Vector2f(540, 300), 20, world, pixPerMeter);
     drawables.push_back((MyDrawable*)(&circle2));
 
-    MyWindowStaticBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, secondWindow);
+
+    MyWindowStaticBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, *(windows[1]));
     drawables.push_back((MyDrawable*)(&windowStaticBox1));
 
-    MyFinish finish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, mainWindow);
+    MyFinish finish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
     drawables.push_back((MyDrawable*)(&finish));
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     float deltaTime = 0.0f;
 
-    sf::Vector2i mousePos = sf::Mouse::getPosition();
-    sf::Vector2i mouseStartDragPos;
-    sf::Vector2i secondWindowPos = secondWindow.getPosition();
+    // sf::Vector2i mousePos = sf::Mouse::getPosition();
+    // sf::Vector2i mouseStartDragPos;
+    // sf::Vector2i secondWindowPos = secondWindow.getPosition();
 
 
-    while (mainWindow.isOpen() || secondWindow.isOpen())
+    while (windows[0]->isOpen() || windows[1]->isOpen())
     {
-        auto now = std::chrono::steady_clock::now();
-        deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime).count()*100.0f;
-        lastTime = now;
-
-
-        // SetTransform version
+        //!! Don't delete this
+        // auto now = std::chrono::steady_clock::now();
+        // deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime).count()*100.0f;
+        // lastTime = now;
         
-        
-        // // Applying forces towards new position version
-        // windowStaticBox1.body->SetAwake(true);
-        // windowStaticBox1.body->ApplyForceToCenter(b2Vec2(((secondWindow.getPosition().x+windowStaticBox1.winPosition.x)/pixPerMeter - windowStaticBox1.body->GetPosition().x)*1000.0f, ((secondWindow.getPosition().y+windowStaticBox1.winPosition.y)/pixPerMeter - windowStaticBox1.body->GetPosition().y)*1000.0f), true);
 
-        
-        
-        // std::cout << "Setting simulation position: " << (secondWindow.getPosition().x+windowStaticBox1.winPosition.x)/pixPerMeter << ", " << (secondWindow.getPosition().y+windowStaticBox1.winPosition.y)/pixPerMeter << std::endl;
-
+        //TODO Do these updates automatically
         windowStaticBox1.updatePosition(pixPerMeter);
         finish.updatePosition(pixPerMeter);
 
         world.Step(timeStep, velocityIterations, positionIterations);
 
-        // std::cout << "Delta time: " << deltaTime << std::endl;
 
-        // boxScreenObject.sreenPosition = sf::Vector2f(body->GetPosition().x*pixPerMeter-boxSize/2, body->GetPosition().y * pixPerMeter-boxSize/2);
-        // boxScreenObject.shape.setRotation(body->GetAngle() * 180 / b2_pi);
-        // std::cout << "Simulation position: " << body->GetPosition().x << ", " << body->GetPosition().y << std::endl;
-        // std::cout << "Screen position: " << boxScreenObject.sreenPosition.x << ", " << boxScreenObject.sreenPosition.y << std::endl;
+        // mainWindow.pollEvents();
+        // mainWindow.updatePosition();
+        // mainWindow.draw(drawables, pixPerMeter);
 
-        // screenObject2.sreenPosition.x += 1 * deltaTime;
-
-        // for (auto event = sf::Event{}; mainWindow.pollEvent(event);)
-        // {
-        //     if (event.type == sf::Event::Closed)
-        //     {
-        //         mainWindow.close();
-        //     } else if (event.type == sf::Event::Resized) {
-        //         mainWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-        //     }
-        // }
-
-        // for (auto event = sf::Event{}; secondWindow.pollEvent(event);)
-        // {
-        //     if (event.type == sf::Event::Closed)
-        //     {
-        //         secondWindow.close();
-        //     } else if (event.type == sf::Event::Resized) {
-        //         secondWindow.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-        //     } else if (event.type == sf::Event::MouseButtonPressed) {
-        //         if (event.mouseButton.button != sf::Mouse::Button::Left) continue;
-        //         mouseStartDragPos = sf::Mouse::getPosition();
-        //         // std::cout << "Mouse button pressed " << event.mouseButton.button << " at " << event.mouseButton.x << ", " << event.mouseButton.y << std::endl;
-        //     } 
-        // }
-
+        // secondWindow.pollEvents();
+        // secondWindow.updatePosition();
+        // secondWindow.draw(drawables, pixPerMeter);
         /* #region Windows update */
-        mainWindow.pollEvents();
-        secondWindow.pollEvents();
-
-        mainWindow.updatePosition();
-        secondWindow.updatePosition();
+        for (auto& window : windows)
+        {
+            window->pollEvents();
+            window->updatePosition(windows);
+            if (window->isOpen()) window->draw(drawables, pixPerMeter);
+        }
         /* #endregion */
-
-        if (mainWindow.isOpen()) mainWindow.draw(drawables, pixPerMeter);
-        if (secondWindow.isOpen()) secondWindow.draw(drawables, pixPerMeter);
 
     }
 

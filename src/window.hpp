@@ -40,13 +40,50 @@ class MyWindow : public sf::RenderWindow
             }
         }
 
-        void updatePosition() {
+        void updatePosition(std::vector<MyWindow*> windows) {
             if (isDragging)
             {
 
                 sf::Vector2i mousePos = sf::Mouse::getPosition();
                 sf::Vector2i mouseDelta = mousePos - mouseStartDragPos;
-                setPosition(startDragWindowPos+mouseDelta/2);
+                sf::Vector2i newPos = startDragWindowPos+mouseDelta/2;
+
+                // if the new position overlaps with another window, put the window at the border of the other window
+                for (MyWindow* window : windows)
+                {
+                    if (window == this) continue;
+                    sf::Vector2i otherPos = window->getPosition();
+                    sf::Vector2u otherSize = window->getSize();
+                    if (newPos.x < otherPos.x+otherSize.x && newPos.x+getSize().x > otherPos.x && newPos.y < otherPos.y+otherSize.y && newPos.y+getSize().y > otherPos.y)
+                    {
+                        // if (newPos.x < otherPos.x+otherSize.x || newPos.y < otherPos.y+otherSize.y) {
+                            int distBorderRight = otherPos.x+otherSize.x - newPos.x;
+                            int distBorderBottom = (otherPos.y+otherSize.y) - newPos.y;
+                            int distBorderLeft = newPos.x+getSize().x - otherPos.x;
+                            int distBorderTop = newPos.y+getSize().y - otherPos.y;
+
+                            if (distBorderRight < distBorderBottom && distBorderRight < distBorderLeft && distBorderRight < distBorderTop) {
+                                newPos.x = otherPos.x+otherSize.x;
+                            } else if (distBorderBottom < distBorderLeft && distBorderBottom < distBorderTop) {
+                                newPos.y = otherPos.y+otherSize.y;
+                            } else if (distBorderLeft < distBorderTop) {
+                                newPos.x = otherPos.x-getSize().x;
+                            } else {
+                                newPos.y = otherPos.y-getSize().y;
+                            }
+
+                            // if (distBorderRight < distBorderBottom) {
+                            //     newPos.x = otherPos.x+otherSize.x;
+                            // } else {
+                            //     newPos.y = otherPos.y+otherSize.y;
+                            // }
+                        // }
+                    }
+                }
+
+                setPosition(newPos);
+
+
                 // posUpdated = true;
 
                 // windowPos = startDragWindowPos+sf::Vector2i(mouseDelta.x/2.1f, mouseDelta.y/2.1f);
