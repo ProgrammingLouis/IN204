@@ -70,4 +70,8 @@ class MyWindow : public sf::RenderWindow
             display();
         }
 
+        bool getIsDragging() const {
+            return isDragging;
+        }
+
 };

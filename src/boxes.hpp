@@ -1,12 +1,11 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/Transformable.hpp>
 #include <Box2D/Box2D.h>
 
 #include <iostream>
 
 #include "drawable.hpp"
+#include "window.hpp"
 
 
 class MyDynamicBox : MyDrawable
@@ -131,7 +130,7 @@ class MyStaticBox : MyDrawable
 /// \brief Class that represents a static box attached to the window and that moves with it
 ///
 ////////////////////////////////////////////////////////////
-class MyWindowKinematicBox : MyDrawable
+class MyWindowStaticBox : MyDrawable
 {
     public:
         // SFML shape
@@ -141,7 +140,7 @@ class MyWindowKinematicBox : MyDrawable
         sf::Vector2f posOnAttachedWin; // position in the window space of the box center
         sf::Vector2f screenHalfSize; // half size of the rectangle shape
 
-        sf::RenderWindow& window; // reference to the window where the box is attached
+        MyWindow& window; // reference to the window where the box is attached
 
         // Box2D objects
         b2BodyDef bodyDef;
@@ -155,7 +154,7 @@ class MyWindowKinematicBox : MyDrawable
         /// \param screenHalfSize !! HALF Size of the rectangle shape
         ///
         ////////////////////////////////////////////////////////////
-        MyWindowKinematicBox(const sf::Vector2f& winPosition, const sf::Vector2f& screenHalfSize, b2World& world, float pixPerMeter, sf::RenderWindow& window) : posOnAttachedWin(winPosition), screenHalfSize(screenHalfSize), window(window)
+        MyWindowStaticBox(const sf::Vector2f& winPosition, const sf::Vector2f& screenHalfSize, b2World& world, float pixPerMeter, MyWindow& window) : posOnAttachedWin(winPosition), screenHalfSize(screenHalfSize), window(window)
         {
             shape = sf::RectangleShape(sf::Vector2f(screenHalfSize.x*2, screenHalfSize.y*2));
             shape.setFillColor(sf::Color::Cyan);
@@ -170,10 +169,18 @@ class MyWindowKinematicBox : MyDrawable
             body->CreateFixture(&PolygonShape, 0.0f);
         }
 
+        void updatePosition(float pixPerMeter)
+        {
+            if (!window.getIsDragging()) return;
+            body->SetAwake(true);
+            body->SetTransform(b2Vec2((window.getPosition().x+posOnAttachedWin.x)/pixPerMeter, (window.getPosition().y+posOnAttachedWin.y)/pixPerMeter), 0);
+        }
+
         void draw(sf::RenderWindow& window, float pixPerMeter)
         {
+            //TODO check if this is optimized or not
             // if the window is the same as the one where the box is attached we just need to draw the shape
-            if (&window == &this->window) {
+            if (&window == (MyWindow*)(&this->window)) {
                 shape.setPosition(posOnAttachedWin);
                 window.draw(shape);
                 return;

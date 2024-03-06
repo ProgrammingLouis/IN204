@@ -6,10 +6,10 @@
 // #include "/usr/local/include/box2d/box2d.h"
 
 #include <chrono>
-#include "screenObject.hpp"
 #include "boxes.hpp"
 #include "circles.hpp"
 #include "window.hpp"
+#include "finish.hpp"
 
 #include <SFML/Window/Mouse.hpp>
 
@@ -18,12 +18,13 @@ int main()
 {
     // Print SFML version
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << std::endl;
+    
     // Print desktop video modes
     auto desktopVideoMode = sf::VideoMode::getDesktopMode();
-    std::cout << "Desktop video mode: " << desktopVideoMode.width << "x" << desktopVideoMode.height << "x" << desktopVideoMode.bitsPerPixel << std::endl;
-    std::cout << "Dividing desktop video mode by 2" << std::endl;
+    //!! For some reason the desktop video mode is not the same as the screen resolution and it must be divided by 2
     desktopVideoMode.width /= 2;
     desktopVideoMode.height /= 2;
+    std::cout << "Desktop video mode divicded by 2 : " << desktopVideoMode.width << "x" << desktopVideoMode.height << "x" << desktopVideoMode.bitsPerPixel << std::endl;
 
     auto mainWindowVideoMode = desktopVideoMode;
     mainWindowVideoMode.width /= 2;
@@ -84,8 +85,11 @@ int main()
     MyDynamicCircle circle2(sf::Vector2f(540, 300), 20, world, pixPerMeter);
     drawables.push_back((MyDrawable*)(&circle2));
 
-    MyWindowKinematicBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, secondWindow);
+    MyWindowStaticBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, secondWindow);
     drawables.push_back((MyDrawable*)(&windowStaticBox1));
+
+    MyFinish finish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, mainWindow);
+    drawables.push_back((MyDrawable*)(&finish));
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
@@ -104,8 +108,7 @@ int main()
 
 
         // SetTransform version
-        windowStaticBox1.body->SetAwake(true);
-        windowStaticBox1.body->SetTransform(b2Vec2((secondWindow.getPosition().x+windowStaticBox1.posOnAttachedWin.x)/pixPerMeter, (secondWindow.getPosition().y+windowStaticBox1.posOnAttachedWin.y)/pixPerMeter), 0);
+        
         
         // // Applying forces towards new position version
         // windowStaticBox1.body->SetAwake(true);
@@ -114,6 +117,9 @@ int main()
         
         
         // std::cout << "Setting simulation position: " << (secondWindow.getPosition().x+windowStaticBox1.winPosition.x)/pixPerMeter << ", " << (secondWindow.getPosition().y+windowStaticBox1.winPosition.y)/pixPerMeter << std::endl;
+
+        windowStaticBox1.updatePosition(pixPerMeter);
+        finish.updatePosition(pixPerMeter);
 
         world.Step(timeStep, velocityIterations, positionIterations);
 
