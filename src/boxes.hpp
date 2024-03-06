@@ -6,8 +6,10 @@
 
 #include <iostream>
 
+#include "drawable.hpp"
 
-class MyDynamicBox
+
+class MyDynamicBox : MyDrawable
 {
     public:
         // SFML shape
@@ -68,7 +70,7 @@ class MyDynamicBox
 
 
 
-class MyStaticBox
+class MyStaticBox : MyDrawable
 {
     public:
         // SFML shape
@@ -107,10 +109,11 @@ class MyStaticBox
             body->CreateFixture(&PolygonShape, 0.0f);
         }
 
-        void draw(sf::RenderWindow& window, sf::Vector2i winPos, float pixPerMeter)
+        void draw(sf::RenderWindow& window, float pixPerMeter)
         {
             // std::cout << "Static box position: " << sreenPosition.x << ", " << sreenPosition.y << std::endl;
-
+            
+            sf::Vector2i winPos = window.getPosition();
             posOnWin = sreenPosition - (sf::Vector2f)winPos;
 
             sf::Vector2u winSize = window.getSize();
@@ -128,7 +131,7 @@ class MyStaticBox
 /// \brief Class that represents a static box attached to the window and that moves with it
 ///
 ////////////////////////////////////////////////////////////
-class MyWindowKinematicBox
+class MyWindowKinematicBox : MyDrawable
 {
     public:
         // SFML shape

@@ -61,11 +61,13 @@ class MyWindow : public sf::RenderWindow
         //     return sf::RenderWindow::getPosition();
         // }
 
-        // void draw(const sf::Drawable& drawable, const sf::RenderStates& states = sf::RenderStates::Default){
-        //     clear();
-            
-        //     // draw
-        //     display();
-        // }
+        void draw(std::vector<MyDrawable*> drawables, float pixPerMeter) {
+            clear();
+            for (MyDrawable* drawable : drawables)
+            {
+                drawable->draw(*this, pixPerMeter);
+            }
+            display();
+        }
 
 };

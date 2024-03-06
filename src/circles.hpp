@@ -6,7 +6,9 @@
 
 #include <iostream>
 
-class MyDynamicCircle
+#include "drawable.hpp"
+
+class MyDynamicCircle : MyDrawable
 {
     public:
         // SFML shape

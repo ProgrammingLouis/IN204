@@ -33,13 +33,13 @@ int main()
     auto windowsSettings = sf::ContextSettings();
     windowsSettings.antialiasingLevel = 8;
     
-    auto mainWindow = MyWindow(mainWindowVideoMode, "SFML works!", sf::Style::Default, windowsSettings);
+    auto mainWindow = MyWindow(mainWindowVideoMode, "MainWindow", sf::Style::Titlebar, windowsSettings);
     // mainWindow.setFramerateLimit(0);
     mainWindow.setVerticalSyncEnabled(true);
     mainWindow.setPosition(sf::Vector2i(10, 0));
 
 
-    auto secondWindow = MyWindow(mainWindowVideoMode, "Second window", sf::Style::Default, windowsSettings);
+    auto secondWindow = MyWindow(mainWindowVideoMode, "Second window", sf::Style::Titlebar, windowsSettings);
     // secondWindow.setFramerateLimit(0);
     secondWindow.setVerticalSyncEnabled(true);
     secondWindow.setPosition(sf::Vector2i(400, 300));
@@ -69,19 +69,23 @@ int main()
     // Simulation parameters
     float timeStep = 1.0f / 60.0f;
     int32 velocityIterations = 8;
-    int32 positionIterations = 3;
+    int32 positionIterations = 8;
 
     /* #endregion */
     
-    // new box
+    std::vector<MyDrawable*> drawables;
+
     MyDynamicBox dynamicBox1(sf::Vector2f(540, 400), sf::Vector2f(25, 25), world, pixPerMeter);
+    drawables.push_back((MyDrawable*)(&dynamicBox1));
 
     MyStaticBox staticBox1(sf::Vector2f(500, 500), sf::Vector2f(50, 20), world, pixPerMeter);
+    drawables.push_back((MyDrawable*)(&staticBox1));
 
     MyDynamicCircle circle2(sf::Vector2f(540, 300), 20, world, pixPerMeter);
+    drawables.push_back((MyDrawable*)(&circle2));
 
     MyWindowKinematicBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, secondWindow);
-
+    drawables.push_back((MyDrawable*)(&windowStaticBox1));
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
@@ -154,32 +158,8 @@ int main()
         secondWindow.updatePosition();
         /* #endregion */
 
-        if (mainWindow.isOpen())
-        {
-            mainWindow.clear();
-
-            // boxScreenObject.draw(mainWindow);
-            dynamicBox1.draw(mainWindow, pixPerMeter);
-            staticBox1.draw(mainWindow, mainWindow.getPosition(), pixPerMeter);
-            circle2.draw(mainWindow, pixPerMeter);
-
-            windowStaticBox1.draw(mainWindow, pixPerMeter);
-
-            mainWindow.display();
-        }
-        if (secondWindow.isOpen())
-        {
-            secondWindow.clear();
-
-            // boxScreenObject.draw(secondWindow);
-            dynamicBox1.draw(secondWindow, pixPerMeter);
-            staticBox1.draw(secondWindow, secondWindow.getPosition(), pixPerMeter);
-            circle2.draw(secondWindow, pixPerMeter);
-
-            windowStaticBox1.draw(secondWindow, pixPerMeter);
-
-            secondWindow.display();
-        }
+        if (mainWindow.isOpen()) mainWindow.draw(drawables, pixPerMeter);
+        if (secondWindow.isOpen()) secondWindow.draw(drawables, pixPerMeter);
 
     }
 
