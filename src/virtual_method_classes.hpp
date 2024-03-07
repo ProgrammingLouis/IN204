@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <Box2D/Box2D.h>
 
 class MyDrawable
 {
@@ -10,4 +11,10 @@ class MyDrawable
 
         //TODO check if needed
         virtual ~MyDrawable() {} // Virtual destructor
+};
+
+class MyWindowStaticObject
+{
+    public:
+        virtual void updatePosition(float pixPerMeter) = 0;
 };

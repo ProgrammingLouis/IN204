@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include "drawable.hpp"
+#include "virtual_method_classes.hpp"
 #include "window.hpp"
 
 
@@ -138,7 +138,7 @@ class MyStaticBox : MyDrawable
 /// \brief Class that represents a static box attached to the window and that moves with it
 ///
 ////////////////////////////////////////////////////////////
-class MyWindowStaticBox : MyDrawable
+class MyWindowStaticBox : MyDrawable, MyWindowStaticObject
 {
     public:
         // SFML shape
@@ -181,8 +181,10 @@ class MyWindowStaticBox : MyDrawable
             world.DestroyBody(body);
         }
 
+        // TODO Also update dynamic object position like the main circle and the dynamic boxes
         void updatePosition(float pixPerMeter)
         {
+            //TODO This will call getIsDragging() for each box, maybe it is better to call it only once
             if (!window.getIsDragging()) return;
             body->SetAwake(true);
             body->SetTransform(b2Vec2((window.getPosition().x+posOnAttachedWin.x)/pixPerMeter, (window.getPosition().y+posOnAttachedWin.y)/pixPerMeter), 0);

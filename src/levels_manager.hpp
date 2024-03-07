@@ -6,11 +6,11 @@
 
 #include "window.hpp"
 #include "levels_data.hpp"
-#include "drawable.hpp"
+#include "virtual_method_classes.hpp"
 #include "finish.hpp"
 
 
-void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
+void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyWindowStaticObject*> *windowStaticObjects, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
 {
     LevelData levelData = levelsData[levelID];
 
@@ -71,7 +71,8 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
         if (drawableData.type == WINDOW_STATIC_BOX)
         {
             auto winStaticBox = new MyWindowStaticBox(drawableData.position, drawableData.size, world, pixPerMeter, *windows[drawableData.windowID]);
-            drawables->push_back((MyDrawable*)(winStaticBox));
+            drawables->push_back((MyDrawable*)winStaticBox);
+            windowStaticObjects->push_back((MyWindowStaticObject*)winStaticBox);
         }
         else if (drawableData.type == STATIC_BOX)
         {
@@ -81,17 +82,18 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
         else if (drawableData.type == DYNAMIC_BOX)
         {
             auto dynamicBox = new MyDynamicBox(drawableData.position, drawableData.size, world, pixPerMeter);
-            drawables->push_back((MyDrawable*)(dynamicBox));
+            drawables->push_back((MyDrawable*)dynamicBox);
         }
         else if (drawableData.type == DYNAMIC_CIRCLE)
         {
             auto dynamicCircle = new MyDynamicCircle(drawableData.position, drawableData.size.x, world, pixPerMeter);
-            drawables->push_back((MyDrawable*)(dynamicCircle));
+            drawables->push_back((MyDrawable*)dynamicCircle);
         }
         else if (drawableData.type == FINISH)
         {
             auto finish = new MyFinish(drawableData.position, drawableData.size, world, pixPerMeter, *windows[drawableData.windowID]);
             drawables->push_back((MyDrawable*)(finish));
+            windowStaticObjects->push_back((MyWindowStaticObject*)finish);
         }
         else
         {
@@ -103,7 +105,7 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
     
 }
 
-void nextLevel(int& currentLevel, int maxLevel, std::vector<MyDrawable*> *drawables, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
+void nextLevel(int& currentLevel, int maxLevel, std::vector<MyDrawable*> *drawables, std::vector<MyWindowStaticObject*> *windowStaticObjects, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
 {
     currentLevel++;
     if (currentLevel > maxLevel)
@@ -112,6 +114,8 @@ void nextLevel(int& currentLevel, int maxLevel, std::vector<MyDrawable*> *drawab
         //TODO Add a Finish screen
         return;
     }
-    loadLevel(currentLevel, drawables, windows, windowsSettings, world, pixPerMeter);
+    // We just need to clear the windowStaticObjects vector because it only contains pointers to drawables which will be deleted in the drawables vector
+    windowStaticObjects->clear();
+    loadLevel(currentLevel, drawables, windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
 
 }

@@ -5,9 +5,9 @@
 #include <iostream>
 
 #include "boxes.hpp"
-#include "drawable.hpp"
+#include "virtual_method_classes.hpp"
 
-class MyFinish : MyDrawable
+class MyFinish : MyDrawable, MyWindowStaticObject
 {
     private:
         MyWindowStaticBox leftBox;

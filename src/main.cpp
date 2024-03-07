@@ -14,6 +14,7 @@
 #include "finish.hpp"
 #include "levels_data.hpp"
 #include "levels_manager.hpp"
+#include "virtual_method_classes.hpp"
 
 
 #include <SFML/Window/Mouse.hpp>  // For desktop mouse position
@@ -117,6 +118,7 @@ int main()
     /* #endregion */
     
     std::vector<MyDrawable*> drawables;
+    std::vector<MyWindowStaticObject*> windowStaticObjects;
 
     MyDynamicBox* dynamicBox1 = new MyDynamicBox(sf::Vector2f(540, 400), sf::Vector2f(25, 25), world, pixPerMeter);
     drawables.push_back((MyDrawable*)dynamicBox1);
@@ -130,9 +132,11 @@ int main()
 
     MyWindowStaticBox* windowStaticBox1 = new MyWindowStaticBox(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, *(windows[1]));
     drawables.push_back((MyDrawable*)windowStaticBox1);
+    windowStaticObjects.push_back((MyWindowStaticObject*)windowStaticBox1);
 
     MyFinish* finish = new MyFinish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
     drawables.push_back((MyDrawable*)finish);
+    windowStaticObjects.push_back((MyWindowStaticObject*)finish);
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
@@ -142,7 +146,7 @@ int main()
     // sf::Vector2i mouseStartDragPos;
     // sf::Vector2i secondWindowPos = secondWindow.getPosition();
 
-
+    std::cout << "Starting main loop" << std::endl;
     while (windows[0]->isOpen() || windows[1]->isOpen())
     {
         //!! Don't delete this
@@ -160,14 +164,20 @@ int main()
             windows[0]->close();
             windows[1]->close();
         } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-            nextLevel(currentLevel, 1, &drawables, windows, windowsSettings, world, pixPerMeter);
+            nextLevel(currentLevel, 1, &drawables, &windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
         }
 
-        //TODO Do these updates automatically
-        if (currentLevel == 0) {
-            windowStaticBox1->updatePosition(pixPerMeter);
-            finish->updatePosition(pixPerMeter);
+        // //TODO Do these updates automatically
+        // if (currentLevel == 0) {
+        //     windowStaticBox1->updatePosition(pixPerMeter);
+        //     finish->updatePosition(pixPerMeter);
+        // }
+
+        for (auto& windowStaticObject : windowStaticObjects)
+        {
+            windowStaticObject->updatePosition(pixPerMeter);
         }
+
 
         world.Step(timeStep, velocityIterations, positionIterations);
 

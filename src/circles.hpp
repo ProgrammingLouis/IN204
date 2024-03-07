@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include "drawable.hpp"
+#include "virtual_method_classes.hpp"
 
 class MyDynamicCircle : MyDrawable
 {
