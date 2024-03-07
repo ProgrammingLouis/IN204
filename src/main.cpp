@@ -14,8 +14,9 @@
 #include "finish.hpp"
 #include "levels_data.hpp"
 
-// For desktop mouse position
-#include <SFML/Window/Mouse.hpp>
+
+#include <SFML/Window/Mouse.hpp>  // For desktop mouse position
+#include <SFML/Window/Keyboard.hpp>  // For keyboard input
 
 
 int main()
@@ -46,8 +47,6 @@ int main()
 
 
     //!! For some really strange I get a segmentation fault when I try to create the windows in a loop
-    // Why ?
-
     // for (int windowID = 0; windowID < level1::numberOfWindows; windowID++)
     // {
 
@@ -125,8 +124,8 @@ int main()
     MyStaticBox staticBox1(sf::Vector2f(500, 500), sf::Vector2f(50, 20), world, pixPerMeter);
     drawables.push_back((MyDrawable*)(&staticBox1));
 
-    MyDynamicCircle circle2(sf::Vector2f(540, 300), 20, world, pixPerMeter);
-    drawables.push_back((MyDrawable*)(&circle2));
+    MyDynamicCircle mainCircle(sf::Vector2f(540, 300), 20, world, pixPerMeter);
+    drawables.push_back((MyDrawable*)(&mainCircle));
 
 
     MyWindowStaticBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, *(windows[1]));
@@ -151,6 +150,22 @@ int main()
         // deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime).count()*100.0f;
         // lastTime = now;
         
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(-200.0f, 0.0f), true);
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(200.0f, 0.0f), true);
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, -200.0f), true);
+        } 
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, 200.0f), true);
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+            windows[0]->close();
+            windows[1]->close();
+        }
 
         //TODO Do these updates automatically
         windowStaticBox1.updatePosition(pixPerMeter);

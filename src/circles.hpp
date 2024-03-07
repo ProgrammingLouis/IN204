@@ -39,8 +39,8 @@ class MyDynamicCircle : MyDrawable
             CircleShape.m_radius = screenRadius/pixPerMeter;
 
             fixtureDef.shape = &CircleShape;
-            fixtureDef.density = 10.0f;
-            fixtureDef.friction = 0.3f;
+            fixtureDef.density = 1.0f;
+            fixtureDef.friction = 10.3f;
 
             body->CreateFixture(&fixtureDef);
         }

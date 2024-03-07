@@ -41,7 +41,7 @@ class MyDynamicBox : MyDrawable
             PolygonShape.SetAsBox((screenHalfSize.x)/pixPerMeter, (screenHalfSize.y)/pixPerMeter);
 
             fixtureDef.shape = &PolygonShape;
-            fixtureDef.density = 10.0f;
+            fixtureDef.density = 0.5f;
             fixtureDef.friction = 0.3f;
 
             body->CreateFixture(&fixtureDef);

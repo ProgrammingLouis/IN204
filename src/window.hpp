@@ -8,6 +8,7 @@ class MyWindow : public sf::RenderWindow
     private:
         sf::Vector2i mouseStartDragPos; // position of the mouse in desktop coordonates when the drag starts
         bool isDragging = false; // is the window being dragged
+        bool isDraggingFocus = false; // is the window started dragging when it gained focus (it is used to check for the mouse release which will not be sent to the window)
         sf::Vector2i startDragWindowPos; // position of the window when the drag starts
 
         // bool posUpdated = false;
@@ -21,7 +22,8 @@ class MyWindow : public sf::RenderWindow
 
         void pollEvents() {
             for (auto event = sf::Event{}; sf::RenderWindow::pollEvent(event);)
-            {
+            {   
+                //TODO try to replace the if-else with a switch
                 if (event.type == sf::Event::Closed)
                     close();
                 else if (event.type == sf::Event::Resized)
@@ -32,11 +34,26 @@ class MyWindow : public sf::RenderWindow
                     startDragWindowPos = getPosition();
                     mouseStartDragPos = sf::Mouse::getPosition();
                     isDragging = true;
-                    // std::cout << "Mouse button pressed " << event.mouseButton.button << " at " << event.mouseButton.x << ", " << event.mouseButton.y << std::endl;
+                    isDraggingFocus = false;
                 } else if (event.type == sf::Event::MouseButtonReleased) {
                     if (event.mouseButton.button != sf::Mouse::Button::Left) continue;
                     isDragging = false;
+                    isDraggingFocus = false;
+                } else if (event.type == sf::Event::GainedFocus) {
+                    // if we gained focus and the left mouse button is pressed it means we started dragging
+                    if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) continue;
+                    startDragWindowPos = getPosition();
+                    mouseStartDragPos = sf::Mouse::getPosition();
+                    isDragging = true;
+                    isDraggingFocus = true;
+                } else if (event.type == sf::Event::LostFocus) {
+                    isDragging = false;
+                    isDraggingFocus = false;
                 }
+            }
+            if (isDraggingFocus && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                isDragging = false;
+                isDraggingFocus = false;
             }
         }
 
