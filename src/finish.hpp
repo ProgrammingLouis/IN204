@@ -28,6 +28,12 @@ class MyFinish : MyDrawable
             rightBox.shape.setFillColor(sf::Color::Red);
         }
 
+        void destroyBody(b2World& world) {
+            leftBox.destroyBody(world);
+            bottomBox.destroyBody(world);
+            rightBox.destroyBody(world);
+        }
+
         void updatePosition(float pixPerMeter)
         {
             leftBox.updatePosition(pixPerMeter);

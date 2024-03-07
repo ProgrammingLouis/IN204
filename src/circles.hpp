@@ -45,6 +45,10 @@ class MyDynamicCircle : MyDrawable
             body->CreateFixture(&fixtureDef);
         }
 
+        void destroyBody(b2World& world) {
+            world.DestroyBody(body);
+        }
+
         void draw(sf::RenderWindow& window, float pixPerMeter)
         {
             sreenPosition = sf::Vector2f(body->GetPosition().x*pixPerMeter, body->GetPosition().y*pixPerMeter);

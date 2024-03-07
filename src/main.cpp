@@ -13,44 +13,45 @@
 #include "window.hpp"
 #include "finish.hpp"
 #include "levels_data.hpp"
+#include "levels_manager.hpp"
 
 
 #include <SFML/Window/Mouse.hpp>  // For desktop mouse position
 #include <SFML/Window/Keyboard.hpp>  // For keyboard input
 
-
 int main()
 {
-    // Print SFML version
+    // Print SFML and Box2D version
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << std::endl;
-    
+    std::cout << "Box2D version: " << b2_version.major << "." << b2_version.minor << "." << b2_version.revision << std::endl;
+
     // Print desktop video modes
     auto desktopVideoMode = sf::VideoMode::getDesktopMode();
     //!! For some reason the desktop video mode is not the same as the screen resolution and it must be divided by 2
     desktopVideoMode.width /= 2;
     desktopVideoMode.height /= 2;
-    std::cout << "Desktop video mode divicded by 2 : " << desktopVideoMode.width << "x" << desktopVideoMode.height << "x" << desktopVideoMode.bitsPerPixel << std::endl;
+    std::cout << "Desktop video mode divided by 2 : " << desktopVideoMode.width << "x" << desktopVideoMode.height << "x" << desktopVideoMode.bitsPerPixel << std::endl;
 
-    auto mainWindowVideoMode = desktopVideoMode;
-    mainWindowVideoMode.width /= 2;
-    mainWindowVideoMode.height /= 2;
-    std::cout << "Main window video mode: " << mainWindowVideoMode.width << "x" << mainWindowVideoMode.height << "x" << mainWindowVideoMode.bitsPerPixel << std::endl;
+    // auto mainWindowVideoMode = desktopVideoMode;
+    // mainWindowVideoMode.width /= 2;
+    // mainWindowVideoMode.height /= 2;
+    // std::cout << "Main window video mode: " << mainWindowVideoMode.width << "x" << mainWindowVideoMode.height << "x" << mainWindowVideoMode.bitsPerPixel << std::endl;
     
     auto windowsSettings = sf::ContextSettings();
     windowsSettings.antialiasingLevel = 8;
 
-    int currentLevel = 1;
+    int currentLevel = 0;
 
     // std::vector<MyWindow&> windows(level1::numberOfWindows);
 
     std::vector<MyWindow*> windows;
 
-
     //!! For some really strange I get a segmentation fault when I try to create the windows in a loop
-    // for (int windowID = 0; windowID < level1::numberOfWindows; windowID++)
+    //TODO try with the new operator
+    // for (int windowID = 0; windowID < levelsData[0].numberOfWindows; windowID++)
     // {
 
-    //     auto thisWindow = MyWindow(mainWindowVideoMode, "Window", sf::Style::None, windowsSettings);
+    //     auto thisWindow = MyWindow(levelsData[0].videoModes[windowID], "Window", sf::Style::None, windowsSettings);
     //     thisWindow.setVerticalSyncEnabled(true);
     //     if (windowID == 0) thisWindow.setPosition(sf::Vector2i(10, 0));
     //     else thisWindow.setPosition(sf::Vector2i(400, 300));
@@ -71,19 +72,19 @@ int main()
     // }
     // std::cout << "All windows polled" << std::endl;
 
-    auto window = MyWindow(level1::videoModes[0], "MainWindow", sf::Style::None, windowsSettings);
+    /* #region Loading windows for level 1 */
+    auto window = MyWindow(levelsData[0].videoModes[0], "MainWindow", sf::Style::Titlebar, windowsSettings);
     // mainWindow.setFramerateLimit(0);
     window.setVerticalSyncEnabled(true);
-    window.setPosition(level1::windowPositions[0]);
+    window.setPosition(levelsData[0].windowPositions[0]);
     windows.push_back(&window);
 
-
-
-    auto window1 = MyWindow(level1::videoModes[1], "Second window", sf::Style::None, windowsSettings);
+    auto window1 = MyWindow(levelsData[0].videoModes[1], "Second window", sf::Style::Titlebar, windowsSettings);
     // secondWindow.setFramerateLimit(0);
     window1.setVerticalSyncEnabled(true);
-    window1.setPosition(level1::windowPositions[1]);
+    window1.setPosition(levelsData[0].windowPositions[1]);
     windows.push_back(&window1);
+    /* #endregion */
 
     // std::vector<MyWindow*> windows = {&mainWindow, &secondWindow};
 
@@ -118,21 +119,21 @@ int main()
     
     std::vector<MyDrawable*> drawables;
 
-    MyDynamicBox dynamicBox1(sf::Vector2f(540, 400), sf::Vector2f(25, 25), world, pixPerMeter);
-    drawables.push_back((MyDrawable*)(&dynamicBox1));
+    MyDynamicBox* dynamicBox1 = new MyDynamicBox(sf::Vector2f(540, 400), sf::Vector2f(25, 25), world, pixPerMeter);
+    drawables.push_back((MyDrawable*)dynamicBox1);
 
-    MyStaticBox staticBox1(sf::Vector2f(500, 500), sf::Vector2f(50, 20), world, pixPerMeter);
-    drawables.push_back((MyDrawable*)(&staticBox1));
+    MyStaticBox* staticBox1 = new MyStaticBox(sf::Vector2f(500, 500), sf::Vector2f(50, 20), world, pixPerMeter);
+    drawables.push_back((MyDrawable*)staticBox1);
 
-    MyDynamicCircle mainCircle(sf::Vector2f(540, 300), 20, world, pixPerMeter);
-    drawables.push_back((MyDrawable*)(&mainCircle));
+    MyDynamicCircle* mainCircle = new MyDynamicCircle(sf::Vector2f(540, 300), 20, world, pixPerMeter);
+    drawables.push_back((MyDrawable*)mainCircle);
 
 
-    MyWindowStaticBox windowStaticBox1(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, *(windows[1]));
-    drawables.push_back((MyDrawable*)(&windowStaticBox1));
+    MyWindowStaticBox* windowStaticBox1 = new MyWindowStaticBox(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, *(windows[1]));
+    drawables.push_back((MyDrawable*)windowStaticBox1);
 
-    MyFinish finish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
-    drawables.push_back((MyDrawable*)(&finish));
+    MyFinish* finish = new MyFinish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
+    drawables.push_back((MyDrawable*)finish);
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
@@ -151,36 +152,32 @@ int main()
         // lastTime = now;
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(-200.0f, 0.0f), true);
+            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(-200.0f, 0.0f), true);
         }
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(200.0f, 0.0f), true);
+            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(200.0f, 0.0f), true);
         }
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, -200.0f), true);
+            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, -200.0f), true);
         } 
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-            mainCircle.body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, 200.0f), true);
+            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, 200.0f), true);
         }
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
             windows[0]->close();
             windows[1]->close();
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+            nextLevel(currentLevel, 1, &drawables, windows, windowsSettings, world, pixPerMeter);
         }
 
         //TODO Do these updates automatically
-        windowStaticBox1.updatePosition(pixPerMeter);
-        finish.updatePosition(pixPerMeter);
+        if (currentLevel == 0) {
+            windowStaticBox1->updatePosition(pixPerMeter);
+            finish->updatePosition(pixPerMeter);
+        }
 
         world.Step(timeStep, velocityIterations, positionIterations);
 
-
-        // mainWindow.pollEvents();
-        // mainWindow.updatePosition();
-        // mainWindow.draw(drawables, pixPerMeter);
-
-        // secondWindow.pollEvents();
-        // secondWindow.updatePosition();
-        // secondWindow.draw(drawables, pixPerMeter);
         /* #region Windows update */
         for (auto& window : windows)
         {
@@ -191,8 +188,6 @@ int main()
         /* #endregion */
 
     }
-
-    delete &world;
 
     return 0;
 }

@@ -47,6 +47,10 @@ class MyDynamicBox : MyDrawable
             body->CreateFixture(&fixtureDef);
         }
 
+        void destroyBody(b2World& world) {
+            world.DestroyBody(body);
+        }
+
         void draw(sf::RenderWindow& window, float pixPerMeter)
         {
             sreenPosition = sf::Vector2f(body->GetPosition().x*pixPerMeter, body->GetPosition().y*pixPerMeter);
@@ -108,6 +112,10 @@ class MyStaticBox : MyDrawable
             body->CreateFixture(&PolygonShape, 0.0f);
         }
 
+        void destroyBody(b2World& world) {
+            world.DestroyBody(body);
+        }
+
         void draw(sf::RenderWindow& window, float pixPerMeter)
         {
             // std::cout << "Static box position: " << sreenPosition.x << ", " << sreenPosition.y << std::endl;
@@ -167,6 +175,10 @@ class MyWindowStaticBox : MyDrawable
             PolygonShape.SetAsBox((screenHalfSize.x)/pixPerMeter, (screenHalfSize.y)/pixPerMeter);
 
             body->CreateFixture(&PolygonShape, 0.0f);
+        }
+
+        void destroyBody(b2World& world) {
+            world.DestroyBody(body);
         }
 
         void updatePosition(float pixPerMeter)
