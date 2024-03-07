@@ -54,9 +54,9 @@ std::vector<LevelData> levelsData = {
         {200, 150}
     },
     {
-        2,
-        {sf::VideoMode(400, 300), sf::VideoMode(400, 300)},
-        {sf::Vector2i(100, 400), sf::Vector2i(800, 200)},
+        3,
+        {sf::VideoMode(400, 300), sf::VideoMode(400, 300), sf::VideoMode(400, 300)},
+        {sf::Vector2i(100, 400), sf::Vector2i(800, 200), sf::Vector2i(800, 400)},
         {
             {WINDOW_STATIC_BOX, sf::Vector2f(50, 50), sf::Vector2f(50, 20), 0, 0, 0, 1},
             {FINISH, sf::Vector2f(350, 250), sf::Vector2f(50, 20), 0, 0, 0, 0}

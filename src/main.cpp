@@ -21,6 +21,8 @@
 
 int main()
 {
+    //TODO Add cheat alert rules
+
     // Print SFML and Box2D version
     std::cout << "SFML version: " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH << std::endl;
     std::cout << "Box2D version: " << b2_version.major << "." << b2_version.minor << "." << b2_version.revision << std::endl;
@@ -46,22 +48,19 @@ int main()
 
     std::vector<MyWindow*> windows;
 
-    //!! For some really strange I get a segmentation fault when I try to create the windows in a loop
-    //TODO try with the new operator
-    // for (int windowID = 0; windowID < levelsData[0].numberOfWindows; windowID++)
-    // {
-
-    //     auto thisWindow = MyWindow(levelsData[0].videoModes[windowID], "Window", sf::Style::None, windowsSettings);
-    //     thisWindow.setVerticalSyncEnabled(true);
-    //     if (windowID == 0) thisWindow.setPosition(sf::Vector2i(10, 0));
-    //     else thisWindow.setPosition(sf::Vector2i(400, 300));
-    //     // thisWindow.setPosition(sf::Vector2i(10, 0));
-    //     windows.push_back(&thisWindow);
-    //     std::cout << "Window " << windowID << " created" << std::endl;
-    //     // windows[windowID].create(level1::videoModes[windowID], "Window "+std::to_string(windowID), sf::Style::None, windowsSettings);
-    //     // windows[windowID].setVerticalSyncEnabled(true);
-    //     // windows[windowID].setPosition(level1::windowPositions[windowID]);
-    // }
+    // TODO allow for unlimited number of windows
+    for (int windowID = 0; windowID < levelsData[0].numberOfWindows; windowID++)
+    {
+        //TODO fix the window drag from the title bar 
+        auto thisWindow = new MyWindow(levelsData[0].videoModes[windowID], "Window", sf::Style::Titlebar, windowsSettings);
+        thisWindow->setVerticalSyncEnabled(true);
+        thisWindow->setPosition(levelsData[0].windowPositions[windowID]);
+        windows.push_back(thisWindow);
+        std::cout << "Window " << windowID << " created" << std::endl;
+        // windows[windowID].create(level1::videoModes[windowID], "Window "+std::to_string(windowID), sf::Style::None, windowsSettings);
+        // windows[windowID].setVerticalSyncEnabled(true);
+        // windows[windowID].setPosition(level1::windowPositions[windowID]);
+    }
     
     // std::vector<MyWindow*> windows;
 
@@ -73,17 +72,17 @@ int main()
     // std::cout << "All windows polled" << std::endl;
 
     /* #region Loading windows for level 1 */
-    auto window = MyWindow(levelsData[0].videoModes[0], "MainWindow", sf::Style::Titlebar, windowsSettings);
-    // mainWindow.setFramerateLimit(0);
-    window.setVerticalSyncEnabled(true);
-    window.setPosition(levelsData[0].windowPositions[0]);
-    windows.push_back(&window);
+    // auto window = MyWindow(levelsData[0].videoModes[0], "MainWindow", sf::Style::Titlebar, windowsSettings);
+    // // mainWindow.setFramerateLimit(0);
+    // window.setVerticalSyncEnabled(true);
+    // window.setPosition(levelsData[0].windowPositions[0]);
+    // windows.push_back(&window);
 
-    auto window1 = MyWindow(levelsData[0].videoModes[1], "Second window", sf::Style::Titlebar, windowsSettings);
-    // secondWindow.setFramerateLimit(0);
-    window1.setVerticalSyncEnabled(true);
-    window1.setPosition(levelsData[0].windowPositions[1]);
-    windows.push_back(&window1);
+    // auto window1 = MyWindow(levelsData[0].videoModes[1], "Second window", sf::Style::Titlebar, windowsSettings);
+    // // secondWindow.setFramerateLimit(0);
+    // window1.setVerticalSyncEnabled(true);
+    // window1.setPosition(levelsData[0].windowPositions[1]);
+    // windows.push_back(&window1);
     /* #endregion */
 
     // std::vector<MyWindow*> windows = {&mainWindow, &secondWindow};
@@ -157,12 +156,6 @@ int main()
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
             mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(200.0f, 0.0f), true);
         }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, -200.0f), true);
-        } 
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, 200.0f), true);
-        }
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
             windows[0]->close();
             windows[1]->close();
@@ -187,6 +180,17 @@ int main()
         }
         /* #endregion */
 
+    }
+
+    // Free memory
+    for (auto& window : windows)
+    {
+        delete window;
+    }
+
+    for (auto& drawable : drawables)
+    {
+        delete drawable;
     }
 
     return 0;

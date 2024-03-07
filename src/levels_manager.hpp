@@ -12,6 +12,8 @@
 
 void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
 {
+    LevelData levelData = levelsData[levelID];
+
     //TODO do not close the windows that would be reused for the next level
     // Clear the windows
     for (auto window : windows)
@@ -35,19 +37,37 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
 
     drawables->clear();
 
-    // Load the level
-    for (int windowID = 0; windowID < levelsData[levelID].numberOfWindows; windowID++)
+    // index of the last window to be created + 1
+    int windowsToBeCreated = levelData.numberOfWindows;
+
+    // Create new windows
+    if (levelData.numberOfWindows > windows.size())
     {
-        windows[windowID]->create(levelsData[levelID].videoModes[windowID], "Window " + std::to_string(windowID), sf::Style::Titlebar, windowsSettings);
+        windowsToBeCreated = windows.size();
+        for (int windowID = windows.size(); windowID < levelData.numberOfWindows; windowID++)
+        {
+            auto thisWindow = new MyWindow(levelData.videoModes[windowID], "Window", sf::Style::Titlebar, windowsSettings);
+            thisWindow->setVerticalSyncEnabled(true);
+            thisWindow->setPosition(levelData.windowPositions[windowID]);
+            windows.push_back(thisWindow);
+            std::cout << "Create new window object for window " << windowID << std::endl;
+        }
+    }
+
+    // Load the level
+    for (int windowID = 0; windowID < windowsToBeCreated; windowID++)
+    {
+        std::cout << "Creating window " << windowID << " from existing object" << std::endl;
+        windows[windowID]->create(levelData.videoModes[windowID], "Window " + std::to_string(windowID), sf::Style::Titlebar, windowsSettings);
         windows[windowID]->setVerticalSyncEnabled(true);
-        windows[windowID]->setPosition(levelsData[levelID].windowPositions[windowID]);
+        windows[windowID]->setPosition(levelData.windowPositions[windowID]);
     }
 
 
     // Create new drawables
-    for (int drawableID = 0; drawableID < levelsData[levelID].drawablesData.size(); drawableID++)
+    for (int drawableID = 0; drawableID < levelData.drawablesData.size(); drawableID++)
     {
-        MyDrawableData drawableData = levelsData[levelID].drawablesData[drawableID];
+        MyDrawableData drawableData = levelData.drawablesData[drawableID];
         if (drawableData.type == WINDOW_STATIC_BOX)
         {
             auto winStaticBox = new MyWindowStaticBox(drawableData.position, drawableData.size, world, pixPerMeter, *windows[drawableData.windowID]);
