@@ -8,10 +8,12 @@
 #include "levels_data.hpp"
 #include "virtual_method_classes.hpp"
 #include "finish.hpp"
+#include "constants.h"
 
 
-void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyWindowStaticObject*> *windowStaticObjects, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
+void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, MyDynamicCircle* mainCircle, std::vector<MyWindowStaticObject*> *windowStaticObjects, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
 {
+    std::cout << "Loading level " << levelID << std::endl;
     LevelData levelData = levelsData[levelID];
 
     //TODO do not close the windows that would be reused for the next level
@@ -25,6 +27,8 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
     // Clear the drawables
     for (auto drawable : *drawables)
     {
+        if (drawable == (MyDrawable*)mainCircle)
+            continue;
         drawable->destroyBody(world);
     }
     std::cout << "Bodies destroyed" << std::endl;
@@ -32,10 +36,13 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
     // Clear the drawables
     for (auto drawable : *drawables)
     {
+        if (drawable == (MyDrawable*)mainCircle)
+            continue;
         delete drawable;
     }
 
     drawables->clear();
+    drawables->push_back((MyDrawable*)mainCircle);
 
     // index of the last window to be created + 1
     int windowsToBeCreated = levelData.numberOfWindows;
@@ -63,6 +70,24 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
         windows[windowID]->setPosition(levelData.windowPositions[windowID]);
     }
 
+    //Update the main circle position
+    if (levelData.mainCirclePlacedOn != -1)
+    {
+        sf::Vector2i winOffset = {0, 0};
+        // If main circle is placed on a finish or a window static object we need to add an offset to the position
+        if (levelData.drawablesData[levelData.mainCirclePlacedOn].type == FINISH || levelData.drawablesData[levelData.mainCirclePlacedOn].type == WINDOW_STATIC_BOX)
+        {
+            winOffset = windows[levelData.drawablesData[levelData.mainCirclePlacedOn].windowID]->getPosition();
+        }
+        mainCircle->body->SetTransform(b2Vec2((levelData.drawablesData[levelData.mainCirclePlacedOn].position.x+winOffset.x)/pixPerMeter, (levelData.drawablesData[levelData.mainCirclePlacedOn].position.y+winOffset.y-MAIN_CIRCLE_RADIUS)/pixPerMeter), 0);
+    }
+    else
+    {
+        mainCircle->body->SetTransform(b2Vec2(levelData.mainCirclePosition.x/pixPerMeter, levelData.mainCirclePosition.y/pixPerMeter), 0);
+    }
+
+
+    // mainCircle->body->SetTransform(b2Vec2(levelData.mainCirclePosition.x/pixPerMeter, levelData.mainCirclePosition.y/pixPerMeter), 0);
 
     // Create new drawables
     for (int drawableID = 0; drawableID < levelData.drawablesData.size(); drawableID++)
@@ -102,10 +127,10 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, std::vector<MyW
         }
     }
 
-    
+    std::cout << "Level loaded" << std::endl;
 }
 
-void nextLevel(int& currentLevel, int maxLevel, std::vector<MyDrawable*> *drawables, std::vector<MyWindowStaticObject*> *windowStaticObjects, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
+void nextLevel(int& currentLevel, int maxLevel, std::vector<MyDrawable*> *drawables, MyDynamicCircle* mainCircle, std::vector<MyWindowStaticObject*> *windowStaticObjects, std::vector<MyWindow*>& windows, sf::ContextSettings windowsSettings, b2World& world, float pixPerMeter)
 {
     currentLevel++;
     if (currentLevel > maxLevel)
@@ -116,6 +141,6 @@ void nextLevel(int& currentLevel, int maxLevel, std::vector<MyDrawable*> *drawab
     }
     // We just need to clear the windowStaticObjects vector because it only contains pointers to drawables which will be deleted in the drawables vector
     windowStaticObjects->clear();
-    loadLevel(currentLevel, drawables, windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+    loadLevel(currentLevel, drawables, mainCircle, windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
 
 }

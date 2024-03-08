@@ -101,9 +101,6 @@ class MyStaticBox : MyDrawable
             shape.setFillColor(sf::Color::Cyan);
             shape.setOrigin(screenHalfSize.x, screenHalfSize.y);
 
-            //? Where is locate the position of the Box2D body on it shape ? (center, top-left corner, bottom-right corner, etc.)
-            //? The position of the Box2D body is located at the center of the shape
-
             bodyDef.position.Set(screenPosition.x/pixPerMeter, screenPosition.y/pixPerMeter);
             body = world.CreateBody(&bodyDef);
 

@@ -13,7 +13,6 @@ class MyDynamicCircle : MyDrawable
         sf::CircleShape shape;
 
         // Screen space variables
-        sf::Vector2f sreenPosition; // position in the screen space of the circle center
         sf::Vector2f posOnWin; // position in the window space of the circle center
         float screenRadius; // radius of the circle shape
 
@@ -23,7 +22,7 @@ class MyDynamicCircle : MyDrawable
         b2CircleShape CircleShape;
         b2FixtureDef fixtureDef;
 
-        MyDynamicCircle(const sf::Vector2f& screenPosition, const float screenRadius, b2World& world, float pixPerMeter) : sreenPosition(screenPosition), posOnWin(0, 0), shape(screenRadius), screenRadius(screenRadius)
+        MyDynamicCircle(const sf::Vector2f& screenPosition, const float screenRadius, b2World& world, float pixPerMeter) : posOnWin(0, 0), shape(screenRadius), screenRadius(screenRadius)
         {
             shape = sf::CircleShape(screenRadius);
             shape.setFillColor(sf::Color::Blue);
@@ -51,7 +50,7 @@ class MyDynamicCircle : MyDrawable
 
         void draw(sf::RenderWindow& window, float pixPerMeter)
         {
-            sreenPosition = sf::Vector2f(body->GetPosition().x*pixPerMeter, body->GetPosition().y*pixPerMeter);
+            const sf::Vector2f sreenPosition = sf::Vector2f(body->GetPosition().x*pixPerMeter, body->GetPosition().y*pixPerMeter);
 
             sf::Vector2i winPos = window.getPosition();
             posOnWin = sreenPosition - (sf::Vector2f)winPos;

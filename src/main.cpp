@@ -147,7 +147,8 @@ int main()
     // sf::Vector2i secondWindowPos = secondWindow.getPosition();
 
     std::cout << "Starting main loop" << std::endl;
-    while (windows[0]->isOpen() || windows[1]->isOpen())
+    //TODO change this
+    while (true)
     {
         //!! Don't delete this
         // auto now = std::chrono::steady_clock::now();
@@ -160,18 +161,16 @@ int main()
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
             mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(200.0f, 0.0f), true);
         }
+        //TODO maybe delete this cause it will close even if Escape is pressed on another app
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-            windows[0]->close();
-            windows[1]->close();
-        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-            nextLevel(currentLevel, 1, &drawables, &windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            for (auto& window : windows)
+            {
+                window->close();
+            }
         }
-
-        // //TODO Do these updates automatically
-        // if (currentLevel == 0) {
-        //     windowStaticBox1->updatePosition(pixPerMeter);
-        //     finish->updatePosition(pixPerMeter);
-        // }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+            nextLevel(currentLevel, 1, &drawables, mainCircle, &windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+        }
 
         for (auto& windowStaticObject : windowStaticObjects)
         {
@@ -182,11 +181,18 @@ int main()
         world.Step(timeStep, velocityIterations, positionIterations);
 
         /* #region Windows update */
+        bool allWindowsClosed = true;
         for (auto& window : windows)
         {
             window->pollEvents();
             window->updatePosition(windows);
-            if (window->isOpen()) window->draw(drawables, pixPerMeter);
+            if (window->isOpen()) {
+                window->draw(drawables, pixPerMeter);
+                allWindowsClosed = false;
+            }
+        }
+        if (allWindowsClosed) {
+            break;
         }
         /* #endregion */
 
