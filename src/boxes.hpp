@@ -157,16 +157,19 @@ class MyWindowStaticBox : MyDrawable, MyWindowStaticObject
         /// 
         /// \param winPosition !! Position of the rectangle shape in the window space
         /// \param screenHalfSize !! HALF Size of the rectangle shape
+        /// \param angle angle in degrees
         ///
         ////////////////////////////////////////////////////////////
-        MyWindowStaticBox(const sf::Vector2f& winPosition, const sf::Vector2f& screenHalfSize, b2World& world, float pixPerMeter, MyWindow& window) : posOnAttachedWin(winPosition), screenHalfSize(screenHalfSize), window(window)
+        MyWindowStaticBox(const sf::Vector2f& winPosition, const sf::Vector2f& screenHalfSize, float angle, b2World& world, float pixPerMeter, MyWindow& window) : posOnAttachedWin(winPosition), screenHalfSize(screenHalfSize), window(window)
         {
             shape = sf::RectangleShape(sf::Vector2f(screenHalfSize.x*2, screenHalfSize.y*2));
             shape.setFillColor(sf::Color::Cyan);
             shape.setOrigin(screenHalfSize.x, screenHalfSize.y);
+            shape.setRotation(angle);
 
             bodyDef.type = b2_kinematicBody;
             bodyDef.position.Set((window.getPosition().x+winPosition.x)/pixPerMeter, (window.getPosition().y+winPosition.y)/pixPerMeter);
+            bodyDef.angle = angle*b2_pi/180.0f;
             body = world.CreateBody(&bodyDef);
 
             PolygonShape.SetAsBox((screenHalfSize.x)/pixPerMeter, (screenHalfSize.y)/pixPerMeter);

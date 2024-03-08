@@ -6,6 +6,7 @@
 
 #include "boxes.hpp"
 #include "virtual_method_classes.hpp"
+#include "constants.h"
 
 class MyFinish : MyDrawable, MyWindowStaticObject
 {
@@ -19,9 +20,9 @@ class MyFinish : MyDrawable, MyWindowStaticObject
         sf::Vector2f posOnAttachedWin; // position in the window space of the box center
 
         MyFinish(const sf::Vector2f& winPosition, const sf::Vector2f& screenHalfSize, b2World& world, float pixPerMeter, MyWindow& window) :
-            leftBox(sf::Vector2f(winPosition.x-screenHalfSize.x+10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), world, pixPerMeter, window),
-            bottomBox(sf::Vector2f(winPosition.x, winPosition.y+screenHalfSize.y/2), sf::Vector2f(screenHalfSize.x-20, screenHalfSize.y/2), world, pixPerMeter, window),
-            rightBox(sf::Vector2f(winPosition.x+screenHalfSize.x-10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), world, pixPerMeter, window)
+            leftBox(sf::Vector2f(winPosition.x-screenHalfSize.x+10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, window),
+            bottomBox(sf::Vector2f(winPosition.x, winPosition.y+screenHalfSize.y/2), sf::Vector2f(screenHalfSize.x-20, screenHalfSize.y/2), 0, world, pixPerMeter, window),
+            rightBox(sf::Vector2f(winPosition.x+screenHalfSize.x-10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, window)
         {
             leftBox.shape.setFillColor(sf::Color::Red);
             bottomBox.shape.setFillColor(sf::Color::Blue);
@@ -48,5 +49,12 @@ class MyFinish : MyDrawable, MyWindowStaticObject
             leftBox.draw(window, pixPerMeter);
             bottomBox.draw(window, pixPerMeter);
             rightBox.draw(window, pixPerMeter);
+        }
+
+        bool isInside(b2Vec2 simulationPos)
+        {
+            const b2Vec2 bottomBoxBodyPos = bottomBox.body->GetPosition();
+            return simulationPos.x < bottomBoxBodyPos.x + FINISH_RANGE && simulationPos.x > bottomBoxBodyPos.x - FINISH_RANGE
+                && simulationPos.y < bottomBoxBodyPos.y -MAIN_CIRCLE_RADIUS + FINISH_RANGE && simulationPos.y > bottomBoxBodyPos.y -MAIN_CIRCLE_RADIUS- FINISH_RANGE;
         }
 };

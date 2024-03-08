@@ -116,12 +116,10 @@ class MyWindow : public sf::RenderWindow
         // }
 
         void draw(std::vector<MyDrawable*> drawables, float pixPerMeter) {
-            clear();
             for (MyDrawable* drawable : drawables)
             {
                 drawable->draw(*this, pixPerMeter);
             }
-            display();
         }
 
         bool getIsDragging() const {

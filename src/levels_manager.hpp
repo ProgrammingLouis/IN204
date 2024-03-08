@@ -70,21 +70,27 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, MyDynamicCircle
         windows[windowID]->setPosition(levelData.windowPositions[windowID]);
     }
 
+    /* #region main circle reset */
     //Update the main circle position
     if (levelData.mainCirclePlacedOn != -1)
     {
         sf::Vector2i winOffset = {0, 0};
+        MyDrawableData placedOnDrawableData = levelData.drawablesData[levelData.mainCirclePlacedOn];
         // If main circle is placed on a finish or a window static object we need to add an offset to the position
-        if (levelData.drawablesData[levelData.mainCirclePlacedOn].type == FINISH || levelData.drawablesData[levelData.mainCirclePlacedOn].type == WINDOW_STATIC_BOX)
+        if (placedOnDrawableData.type == WINDOW_STATIC_BOX)
         {
-            winOffset = windows[levelData.drawablesData[levelData.mainCirclePlacedOn].windowID]->getPosition();
+            winOffset = windows[placedOnDrawableData.windowID]->getPosition();
         }
-        mainCircle->body->SetTransform(b2Vec2((levelData.drawablesData[levelData.mainCirclePlacedOn].position.x+winOffset.x)/pixPerMeter, (levelData.drawablesData[levelData.mainCirclePlacedOn].position.y+winOffset.y-MAIN_CIRCLE_RADIUS)/pixPerMeter), 0);
+        mainCircle->body->SetTransform(b2Vec2((placedOnDrawableData.position.x+winOffset.x)/pixPerMeter, (placedOnDrawableData.position.y+winOffset.y-MAIN_CIRCLE_RADIUS)/pixPerMeter), 0);
     }
     else
     {
         mainCircle->body->SetTransform(b2Vec2(levelData.mainCirclePosition.x/pixPerMeter, levelData.mainCirclePosition.y/pixPerMeter), 0);
     }
+
+    mainCircle->body->SetLinearVelocity(b2Vec2(0, 0));
+    mainCircle->body->SetAngularVelocity(0);
+    /* #endregion */
 
 
     // mainCircle->body->SetTransform(b2Vec2(levelData.mainCirclePosition.x/pixPerMeter, levelData.mainCirclePosition.y/pixPerMeter), 0);
@@ -95,7 +101,7 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, MyDynamicCircle
         MyDrawableData drawableData = levelData.drawablesData[drawableID];
         if (drawableData.type == WINDOW_STATIC_BOX)
         {
-            auto winStaticBox = new MyWindowStaticBox(drawableData.position, drawableData.size, world, pixPerMeter, *windows[drawableData.windowID]);
+            auto winStaticBox = new MyWindowStaticBox(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, *windows[drawableData.windowID]);
             drawables->push_back((MyDrawable*)winStaticBox);
             windowStaticObjects->push_back((MyWindowStaticObject*)winStaticBox);
         }
@@ -114,12 +120,12 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, MyDynamicCircle
             auto dynamicCircle = new MyDynamicCircle(drawableData.position, drawableData.size.x, world, pixPerMeter);
             drawables->push_back((MyDrawable*)dynamicCircle);
         }
-        else if (drawableData.type == FINISH)
-        {
-            auto finish = new MyFinish(drawableData.position, drawableData.size, world, pixPerMeter, *windows[drawableData.windowID]);
-            drawables->push_back((MyDrawable*)(finish));
-            windowStaticObjects->push_back((MyWindowStaticObject*)finish);
-        }
+        // else if (drawableData.type == FINISH)
+        // {
+        //     auto finish = new MyFinish(drawableData.position, drawableData.size, world, pixPerMeter, *windows[drawableData.windowID]);
+        //     drawables->push_back((MyDrawable*)(finish));
+        //     windowStaticObjects->push_back((MyWindowStaticObject*)finish);
+        // }
         else
         {
             std::cerr << "Unknown drawable type" << std::endl;

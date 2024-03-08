@@ -49,7 +49,6 @@ int main()
 
     std::vector<MyWindow*> windows;
 
-    // TODO allow for unlimited number of windows
     for (int windowID = 0; windowID < levelsData[0].numberOfWindows; windowID++)
     {
         //TODO fix the window drag from the title bar 
@@ -117,26 +116,26 @@ int main()
 
     /* #endregion */
     
-    std::vector<MyDrawable*> drawables;
-    std::vector<MyWindowStaticObject*> windowStaticObjects;
+    std::vector<MyDrawable*> levelDrawables;
+    std::vector<MyWindowStaticObject*> levelWindowStaticObjects;
+    std::vector<MyDrawable*> allLevelDrawables;
 
     MyDynamicBox* dynamicBox1 = new MyDynamicBox(sf::Vector2f(540, 400), sf::Vector2f(25, 25), world, pixPerMeter);
-    drawables.push_back((MyDrawable*)dynamicBox1);
+    levelDrawables.push_back((MyDrawable*)dynamicBox1);
 
     MyStaticBox* staticBox1 = new MyStaticBox(sf::Vector2f(500, 500), sf::Vector2f(50, 20), world, pixPerMeter);
-    drawables.push_back((MyDrawable*)staticBox1);
+    levelDrawables.push_back((MyDrawable*)staticBox1);
 
     MyDynamicCircle* mainCircle = new MyDynamicCircle(sf::Vector2f(540, 300), 20, world, pixPerMeter);
-    drawables.push_back((MyDrawable*)mainCircle);
+    allLevelDrawables.push_back((MyDrawable*)mainCircle);
 
 
-    MyWindowStaticBox* windowStaticBox1 = new MyWindowStaticBox(sf::Vector2f(100, 100), sf::Vector2f(50, 20), world, pixPerMeter, *(windows[1]));
-    drawables.push_back((MyDrawable*)windowStaticBox1);
-    windowStaticObjects.push_back((MyWindowStaticObject*)windowStaticBox1);
+    MyWindowStaticBox* windowStaticBox1 = new MyWindowStaticBox(sf::Vector2f(100, 100), sf::Vector2f(50, 20), 0, world, pixPerMeter, *(windows[1]));
+    levelDrawables.push_back((MyDrawable*)windowStaticBox1);
+    levelWindowStaticObjects.push_back((MyWindowStaticObject*)windowStaticBox1);
 
     MyFinish* finish = new MyFinish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
-    drawables.push_back((MyDrawable*)finish);
-    windowStaticObjects.push_back((MyWindowStaticObject*)finish);
+    allLevelDrawables.push_back((MyDrawable*)finish);
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
@@ -147,8 +146,8 @@ int main()
     // sf::Vector2i secondWindowPos = secondWindow.getPosition();
 
     std::cout << "Starting main loop" << std::endl;
-    //TODO change this
-    while (true)
+    bool allWindowsClosed = false;
+    while (!allWindowsClosed)
     {
         //!! Don't delete this
         // auto now = std::chrono::steady_clock::now();
@@ -168,31 +167,41 @@ int main()
                 window->close();
             }
         }
+        //TODO delete this for final game
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-            nextLevel(currentLevel, 1, &drawables, mainCircle, &windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            nextLevel(currentLevel, 1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
         }
 
-        for (auto& windowStaticObject : windowStaticObjects)
+        // If circle is in the finish zone, go to the next level
+        //TODO check if the finish box is right
+        if (mainCircle->body->GetLinearVelocity().Length() < 0.1f && finish->isInside(mainCircle->body->GetPosition()))
         {
-            windowStaticObject->updatePosition(pixPerMeter);
+            nextLevel(currentLevel, 1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
         }
+
+
+        for (auto& winStaticObject : levelWindowStaticObjects)
+        {
+            winStaticObject->updatePosition(pixPerMeter);
+        }
+        finish->updatePosition(pixPerMeter);
 
 
         world.Step(timeStep, velocityIterations, positionIterations);
-
+        
         /* #region Windows update */
-        bool allWindowsClosed = true;
+        allWindowsClosed = true;
         for (auto& window : windows)
         {
             window->pollEvents();
             window->updatePosition(windows);
             if (window->isOpen()) {
-                window->draw(drawables, pixPerMeter);
+                window->clear();
+                window->draw(levelDrawables, pixPerMeter);
+                window->draw(allLevelDrawables, pixPerMeter);
+                window->display();
                 allWindowsClosed = false;
             }
-        }
-        if (allWindowsClosed) {
-            break;
         }
         /* #endregion */
 
@@ -203,11 +212,20 @@ int main()
     {
         delete window;
     }
+    std::cout << "Cleared windows" << std::endl;
 
-    for (auto& drawable : drawables)
+    for (auto& drawable : levelDrawables)
     {
         delete drawable;
     }
+    std::cout << "Cleared levelDrawables" << std::endl;
+    
+    //TODO THis doesn't work is next levels, why ?
+    for (auto& drawable : allLevelDrawables)
+    {
+        delete drawable;
+    }
+    std::cout << "Cleared allLevelDrawables" << std::endl;
 
     return 0;
 }

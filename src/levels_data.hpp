@@ -23,14 +23,15 @@ enum MyDrawableType {
     WINDOW_STATIC_BOX,
     STATIC_BOX,
     DYNAMIC_BOX,
-    DYNAMIC_CIRCLE,
-    FINISH
+    DYNAMIC_CIRCLE
+    // FINISH
 };
 
 struct MyDrawableData {
     MyDrawableType type;
     sf::Vector2f position;
     sf::Vector2f size;
+    float angle; // in degrees
     float density;
     float friction;
     float restitution;
@@ -76,11 +77,11 @@ std::vector<LevelData> levelsData = {
 
         // drawablesData
         {
-            {WINDOW_STATIC_BOX, sf::Vector2f(50, 50), sf::Vector2f(50, 20), 0, 0, 0, 1},
-            {FINISH, sf::Vector2f(200, 150), sf::Vector2f(50, 20), 0, 0, 0, 0}
+            {WINDOW_STATIC_BOX, sf::Vector2f(200, 150), sf::Vector2f(50, 20), 0, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(250, 150), sf::Vector2f(50, 20), 20, 0, 0, 0, 1},
+            // {FINISH, sf::Vector2f(200, 150), sf::Vector2f(50, 20), 0, 0, 0, 0}
         },
         
-        // {800+50, 200+50-20},
         {0, 0}, // mainCirclePosition
         0 // mainCirclePlacedOn
      }
