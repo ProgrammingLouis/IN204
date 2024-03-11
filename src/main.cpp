@@ -169,6 +169,13 @@ int main()
             // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
         }
 
+        // if mainCicle falls off the screen, restart the level
+        if (mainCircle->body->GetPosition().y*pixPerMeter > desktopVideoMode.height || mainCircle->body->GetPosition().y*pixPerMeter < 0 || mainCircle->body->GetPosition().x*pixPerMeter > desktopVideoMode.width || mainCircle->body->GetPosition().x*pixPerMeter < 0)
+        {
+            // Restart level
+            loadLevel(currentLevel, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+        }
+
 
         for (auto& winStaticObject : levelWindowStaticObjects)
         {
