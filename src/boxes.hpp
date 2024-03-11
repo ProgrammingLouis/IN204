@@ -182,13 +182,20 @@ class MyWindowStaticBox : MyDrawable, MyWindowStaticObject
         }
 
         // TODO Also update dynamic object position like the main circle and the dynamic boxes
-        void updatePosition(float pixPerMeter)
+        void updatePositionIfDrag(float pixPerMeter)
         {
             //TODO This will call getIsDragging() for each box, maybe it is better to call it only once
             if (!window.getIsDragging()) return;
             body->SetAwake(true);
-            body->SetTransform(b2Vec2((window.getPosition().x+posOnAttachedWin.x)/pixPerMeter, (window.getPosition().y+posOnAttachedWin.y)/pixPerMeter), 0);
+
+            updatePosition(pixPerMeter);
         }
+
+        void updatePosition(float pixPerMeter)
+        {
+            body->SetTransform(b2Vec2((window.getPosition().x+posOnAttachedWin.x)/pixPerMeter, (window.getPosition().y+posOnAttachedWin.y)/pixPerMeter), body->GetAngle());
+        }
+
 
         void draw(sf::RenderWindow& window, float pixPerMeter)
         {

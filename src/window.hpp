@@ -2,6 +2,9 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Mouse.hpp>
+#include <Box2D/Box2D.h>
+
+int windowsCount = 0; //FOR DEBUGGING
 
 class MyWindow : public sf::RenderWindow
 {
@@ -9,18 +12,25 @@ class MyWindow : public sf::RenderWindow
         sf::Vector2i mouseStartDragPos; // position of the mouse in desktop coordonates when the drag starts
         bool isDragging = false; // is the window being dragged
         bool isDraggingFocus = false; // is the window started dragging when it gained focus (it is used to check for the mouse release which will not be sent to the window)
-        sf::Vector2i startDragWindowPos; // position of the window when the drag starts
+        int windowID; //FOR DEBUGGING
 
-        // bool posUpdated = false;
-        // sf::Vector2i windowPos;
 
     public:
+        sf::Vector2i startDragWindowPos; // position of the window when the drag starts
+        sf::Vector2i mouseDelta; // The distance between the mouse position when the drag starts and the current mouse position
+
+        sf::Vector2i newPos; // The new position of the window for next frame when dragging (it is stored here to be used to update window position after the updatePositionIfDrag function)
+
+
         MyWindow(const sf::VideoMode& videoMode, const std::string& title, sf::Uint32 style, const sf::ContextSettings& settings) : sf::RenderWindow(videoMode, title, style, settings)
         {
             setVerticalSyncEnabled(true);
+            windowID = windowsCount++; //FOR DEBUGGING
         }
 
-        void pollEvents() {
+        // return true if started dragging
+        bool pollEvents() {
+            bool startedDragging = false;
             for (auto event = sf::Event{}; sf::RenderWindow::pollEvent(event);)
             {   
                 //TODO try to replace the if-else with a switch
@@ -35,6 +45,7 @@ class MyWindow : public sf::RenderWindow
                     mouseStartDragPos = sf::Mouse::getPosition();
                     isDragging = true;
                     isDraggingFocus = false;
+                    startedDragging = true;
                 } else if (event.type == sf::Event::MouseButtonReleased) {
                     if (event.mouseButton.button != sf::Mouse::Button::Left) continue;
                     isDragging = false;
@@ -46,6 +57,7 @@ class MyWindow : public sf::RenderWindow
                     mouseStartDragPos = sf::Mouse::getPosition();
                     isDragging = true;
                     isDraggingFocus = true;
+                    startedDragging = true;
                 } else if (event.type == sf::Event::LostFocus) {
                     isDragging = false;
                     isDraggingFocus = false;
@@ -55,15 +67,17 @@ class MyWindow : public sf::RenderWindow
                 isDragging = false;
                 isDraggingFocus = false;
             }
+
+            sf::Vector2i mousePos = sf::Mouse::getPosition();
+            mouseDelta = (mousePos - mouseStartDragPos)/2;
+
+            return startedDragging;
         }
 
-        void updatePosition(std::vector<MyWindow*> windows) {
+        void updatePositionIfDrag(std::vector<MyWindow*> windows) {
             if (isDragging)
             {
-
-                sf::Vector2i mousePos = sf::Mouse::getPosition();
-                sf::Vector2i mouseDelta = mousePos - mouseStartDragPos;
-                sf::Vector2i newPos = startDragWindowPos+mouseDelta/2;
+                newPos = startDragWindowPos+mouseDelta;
 
                 // if the new position overlaps with another window, put the window at the border of the other window
                 for (MyWindow* window : windows)
@@ -73,47 +87,25 @@ class MyWindow : public sf::RenderWindow
                     sf::Vector2u otherSize = window->getSize();
                     if (newPos.x < otherPos.x+otherSize.x && newPos.x+getSize().x > otherPos.x && newPos.y < otherPos.y+otherSize.y && newPos.y+getSize().y > otherPos.y)
                     {
-                        // if (newPos.x < otherPos.x+otherSize.x || newPos.y < otherPos.y+otherSize.y) {
-                            int distBorderRight = otherPos.x+otherSize.x - newPos.x;
-                            int distBorderBottom = (otherPos.y+otherSize.y) - newPos.y;
-                            int distBorderLeft = newPos.x+getSize().x - otherPos.x;
-                            int distBorderTop = newPos.y+getSize().y - otherPos.y;
+                        int distBorderRight = otherPos.x+otherSize.x - newPos.x;
+                        int distBorderBottom = (otherPos.y+otherSize.y) - newPos.y;
+                        int distBorderLeft = newPos.x+getSize().x - otherPos.x;
+                        int distBorderTop = newPos.y+getSize().y - otherPos.y;
 
-                            if (distBorderRight < distBorderBottom && distBorderRight < distBorderLeft && distBorderRight < distBorderTop) {
-                                newPos.x = otherPos.x+otherSize.x;
-                            } else if (distBorderBottom < distBorderLeft && distBorderBottom < distBorderTop) {
-                                newPos.y = otherPos.y+otherSize.y;
-                            } else if (distBorderLeft < distBorderTop) {
-                                newPos.x = otherPos.x-getSize().x;
-                            } else {
-                                newPos.y = otherPos.y-getSize().y;
-                            }
+                        if (distBorderRight < distBorderBottom && distBorderRight < distBorderLeft && distBorderRight < distBorderTop) {
+                            newPos.x = otherPos.x+otherSize.x;
+                        } else if (distBorderBottom < distBorderLeft && distBorderBottom < distBorderTop) {
+                            newPos.y = otherPos.y+otherSize.y;
+                        } else if (distBorderLeft < distBorderTop) {
+                            newPos.x = otherPos.x-getSize().x;
+                        } else {
+                            newPos.y = otherPos.y-getSize().y;
+                        }
 
-                            // if (distBorderRight < distBorderBottom) {
-                            //     newPos.x = otherPos.x+otherSize.x;
-                            // } else {
-                            //     newPos.y = otherPos.y+otherSize.y;
-                            // }
-                        // }
                     }
                 }
-
-                setPosition(newPos);
-
-
-                // posUpdated = true;
-
-                // windowPos = startDragWindowPos+sf::Vector2i(mouseDelta.x/2.1f, mouseDelta.y/2.1f);
             }
-            // else posUpdated = false;
         }
-
-        // sf::Vector2i getPosition() const {
-        //     if (posUpdated) {
-        //         return windowPos;
-        //     }
-        //     return sf::RenderWindow::getPosition();
-        // }
 
         void draw(std::vector<MyDrawable*> drawables, float pixPerMeter) {
             for (MyDrawable* drawable : drawables)

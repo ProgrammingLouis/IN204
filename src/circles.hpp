@@ -6,7 +6,7 @@
 
 #include "virtual_method_classes.hpp"
 
-class MyDynamicCircle : MyDrawable
+class MyDynamicCircle : public MyDrawable, public MyDynamicObject
 {
     public:
         // SFML shape
@@ -18,7 +18,7 @@ class MyDynamicCircle : MyDrawable
 
         // Box2D objects
         b2BodyDef bodyDef;
-        b2Body* body;
+        // b2Body* body; //!! This is already defined in the DynamicObject class, so that we can access it from the the casted object
         b2CircleShape CircleShape;
         b2FixtureDef fixtureDef;
 

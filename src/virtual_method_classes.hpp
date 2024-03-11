@@ -16,5 +16,13 @@ class MyDrawable
 class MyWindowStaticObject
 {
     public:
-        virtual void updatePosition(float pixPerMeter) = 0;
+        virtual void updatePositionIfDrag(float pixPerMeter) = 0;
+};
+
+class MyDynamicObject
+{
+    public:
+        b2Body* body;
+        b2Vec2 startDagPos;
+        int windowID; // The id of the window in which the object is
 };

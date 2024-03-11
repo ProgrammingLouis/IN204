@@ -35,54 +35,29 @@ int main()
     desktopVideoMode.height /= 2;
     std::cout << "Desktop video mode divided by 2 : " << desktopVideoMode.width << "x" << desktopVideoMode.height << "x" << desktopVideoMode.bitsPerPixel << std::endl;
 
-    // auto mainWindowVideoMode = desktopVideoMode;
-    // mainWindowVideoMode.width /= 2;
-    // mainWindowVideoMode.height /= 2;
-    // std::cout << "Main window video mode: " << mainWindowVideoMode.width << "x" << mainWindowVideoMode.height << "x" << mainWindowVideoMode.bitsPerPixel << std::endl;
     
     auto windowsSettings = sf::ContextSettings();
     windowsSettings.antialiasingLevel = 8;
 
-    int currentLevel = 0;
+    int currentLevel = -1;
 
-    // std::vector<MyWindow&> windows(level1::numberOfWindows);
 
     std::vector<MyWindow*> windows;
-
-    for (int windowID = 0; windowID < levelsData[0].numberOfWindows; windowID++)
-    {
-        //TODO fix the window drag from the title bar 
-        auto thisWindow = new MyWindow(levelsData[0].videoModes[windowID], "Window", sf::Style::Titlebar, windowsSettings);
-        thisWindow->setVerticalSyncEnabled(true);
-        thisWindow->setPosition(levelsData[0].windowPositions[windowID]);
-        windows.push_back(thisWindow);
-        std::cout << "Window " << windowID << " created" << std::endl;
-        // windows[windowID].create(level1::videoModes[windowID], "Window "+std::to_string(windowID), sf::Style::None, windowsSettings);
-        // windows[windowID].setVerticalSyncEnabled(true);
-        // windows[windowID].setPosition(level1::windowPositions[windowID]);
-    }
     
-    // std::vector<MyWindow*> windows;
-
-    // std::cout << "Number of windows: " << windows.size() << std::endl;
-    // for (auto& window : windows)
-    // {
-    //     window->create(mainWindowVideoMode, "Window", sf::Style::None, windowsSettings);
-    // }
-    // std::cout << "All windows polled" << std::endl;
+    //TODO fix the window drag from the title bar 
 
     /* #region Loading windows for level 1 */
-    // auto window = MyWindow(levelsData[0].videoModes[0], "MainWindow", sf::Style::Titlebar, windowsSettings);
-    // // mainWindow.setFramerateLimit(0);
-    // window.setVerticalSyncEnabled(true);
-    // window.setPosition(levelsData[0].windowPositions[0]);
-    // windows.push_back(&window);
+    auto window = MyWindow(levelsData[0].videoModes[0], "MainWindow", sf::Style::Titlebar, windowsSettings);
+    // mainWindow.setFramerateLimit(0);
+    window.setVerticalSyncEnabled(true);
+    window.setPosition(levelsData[0].windowPositions[0]);
+    windows.push_back(&window);
 
-    // auto window1 = MyWindow(levelsData[0].videoModes[1], "Second window", sf::Style::Titlebar, windowsSettings);
-    // // secondWindow.setFramerateLimit(0);
-    // window1.setVerticalSyncEnabled(true);
-    // window1.setPosition(levelsData[0].windowPositions[1]);
-    // windows.push_back(&window1);
+    auto window1 = MyWindow(levelsData[0].videoModes[1], "Second window", sf::Style::Titlebar, windowsSettings);
+    // secondWindow.setFramerateLimit(0);
+    window1.setVerticalSyncEnabled(true);
+    window1.setPosition(levelsData[0].windowPositions[1]);
+    windows.push_back(&window1);
     /* #endregion */
 
     // std::vector<MyWindow*> windows = {&mainWindow, &secondWindow};
@@ -104,6 +79,8 @@ int main()
     /* #region Box2D Init */
     b2Vec2 gravity(0.0f, 100.0f);
     b2World world(gravity);
+    // world.SetAllowSleeping(true);
+    // world.SetContinuousPhysics(true);
     //!! World size should be less than 2km (2000m) in any direction
     //!! Bodies size should be between 0.1m and 10m
 
@@ -119,31 +96,21 @@ int main()
     std::vector<MyDrawable*> levelDrawables;
     std::vector<MyWindowStaticObject*> levelWindowStaticObjects;
     std::vector<MyDrawable*> allLevelDrawables;
-
-    MyDynamicBox* dynamicBox1 = new MyDynamicBox(sf::Vector2f(540, 400), sf::Vector2f(25, 25), world, pixPerMeter);
-    levelDrawables.push_back((MyDrawable*)dynamicBox1);
-
-    MyStaticBox* staticBox1 = new MyStaticBox(sf::Vector2f(500, 500), sf::Vector2f(50, 20), world, pixPerMeter);
-    levelDrawables.push_back((MyDrawable*)staticBox1);
+    std::vector<MyDynamicObject*> levelDynamicObject; //TODO use this or delete it, and clear it in the levels_manager
 
     MyDynamicCircle* mainCircle = new MyDynamicCircle(sf::Vector2f(540, 300), 20, world, pixPerMeter);
     allLevelDrawables.push_back((MyDrawable*)mainCircle);
+    levelDynamicObject.push_back((MyDynamicObject*)mainCircle);
 
-
-    MyWindowStaticBox* windowStaticBox1 = new MyWindowStaticBox(sf::Vector2f(100, 100), sf::Vector2f(50, 20), 0, world, pixPerMeter, *(windows[1]));
-    levelDrawables.push_back((MyDrawable*)windowStaticBox1);
-    levelWindowStaticObjects.push_back((MyWindowStaticObject*)windowStaticBox1);
-
-    MyFinish* finish = new MyFinish(sf::Vector2f(80, 100), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
+    MyFinish* finish = new MyFinish(sf::Vector2f(0, 0), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
     allLevelDrawables.push_back((MyDrawable*)finish);
+
+    // Load level 1
+    nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     float deltaTime = 0.0f;
-
-    // sf::Vector2i mousePos = sf::Mouse::getPosition();
-    // sf::Vector2i mouseStartDragPos;
-    // sf::Vector2i secondWindowPos = secondWindow.getPosition();
 
     std::cout << "Starting main loop" << std::endl;
     bool allWindowsClosed = false;
@@ -169,32 +136,77 @@ int main()
         }
         //TODO delete this for final game
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-            nextLevel(currentLevel, 1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
         }
 
         // If circle is in the finish zone, go to the next level
         //TODO check if the finish box is right
         if (mainCircle->body->GetLinearVelocity().Length() < 0.1f && finish->isInside(mainCircle->body->GetPosition()))
         {
-            nextLevel(currentLevel, 1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            //TODO uncomment this for final game
+            // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
         }
 
 
         for (auto& winStaticObject : levelWindowStaticObjects)
         {
-            winStaticObject->updatePosition(pixPerMeter);
+            winStaticObject->updatePositionIfDrag(pixPerMeter);
         }
-        finish->updatePosition(pixPerMeter);
+        finish->updatePositionIfDrag(pixPerMeter);
 
 
+
+        // // apply a force to mainCricle to offset gravity
+        // mainCircle->body->ApplyForceToCenter(b2Vec2(0.0f, -100.0f*mainCircle->body->GetMass()), true);
+        
         world.Step(timeStep, velocityIterations, positionIterations);
         
         /* #region Windows update */
         allWindowsClosed = true;
+        int winID =0;
         for (auto& window : windows)
         {
-            window->pollEvents();
-            window->updatePosition(windows);
+            bool winStartedDragging = window->pollEvents();
+            if (winStartedDragging) std::cout << "Window " << winID << " started dragging" << std::endl;
+            
+            window->updatePositionIfDrag(windows);
+
+            //!!
+            //TODO determine object inside and outside the dragging window
+
+            //TODO mabe should put the body in sleep mode here
+            if (winStartedDragging) {
+                for (auto& dynamicObject : levelDynamicObject)
+                {
+                    //TODO MAYBE DO THIS EVERY FRAME
+                    // if object is in the window
+                    // if (dynamicObject->body->GetPosition().x*pixPerMeter > window->getPosition().x && dynamicObject->body->GetPosition().x*pixPerMeter < window->getPosition().x+window->getSize().x && dynamicObject->body->GetPosition().y*pixPerMeter > window->getPosition().y && dynamicObject->body->GetPosition().y*pixPerMeter < window->getPosition().y+window->getSize().y)
+                    // {
+                        dynamicObject->startDagPos = dynamicObject->body->GetPosition();
+                    //     dynamicObject->windowID = winID;
+                    // }
+                }
+            }
+
+            if (window->getIsDragging()) {
+                for (auto& dynamicObject : levelDynamicObject)
+                {
+                    // if (dynamicObject->windowID != winID) continue;
+                    //!! if window moves too fast the object can be left behind because it's not in the window anymore
+                    if (dynamicObject->body->GetPosition().x*pixPerMeter > window->getPosition().x && dynamicObject->body->GetPosition().x*pixPerMeter < window->getPosition().x+window->getSize().x && dynamicObject->body->GetPosition().y*pixPerMeter > window->getPosition().y && dynamicObject->body->GetPosition().y*pixPerMeter < window->getPosition().y+window->getSize().y)
+                    {
+                        b2Vec2 bodyPosWithoutDelta = dynamicObject->body->GetPosition();
+                        sf::Vector2i winDelta = window->newPos - window->getPosition();
+                        dynamicObject->body->SetTransform(b2Vec2(bodyPosWithoutDelta.x+winDelta.x/pixPerMeter, bodyPosWithoutDelta.y+winDelta.y/pixPerMeter), dynamicObject->body->GetAngle());
+                    }
+                }
+            }
+
+            if (window->getIsDragging()) {
+                window->setPosition(window->newPos);
+            }
+
             if (window->isOpen()) {
                 window->clear();
                 window->draw(levelDrawables, pixPerMeter);
@@ -202,7 +214,9 @@ int main()
                 window->display();
                 allWindowsClosed = false;
             }
+            winID++;
         }
+
         /* #endregion */
 
     }
