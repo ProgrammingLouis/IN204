@@ -20,6 +20,8 @@
 #include <SFML/Window/Mouse.hpp>  // For desktop mouse position
 #include <SFML/Window/Keyboard.hpp>  // For keyboard input
 
+std::map<sf::Keyboard::Key, bool> keysPressed;
+
 int main()
 {
     //TODO Add cheat alert rules
@@ -124,11 +126,12 @@ int main()
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
             mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(-200.0f, 0.0f), true);
         }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
             mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(200.0f, 0.0f), true);
         }
+
         //TODO maybe delete this cause it will close even if Escape is pressed on another app
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
             for (auto& window : windows)
             {
                 window->close();
@@ -136,8 +139,26 @@ int main()
         }
         //TODO delete this for final game
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-            // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
-            nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            if (!keysPressed[sf::Keyboard::Space])
+            {
+                nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+                keysPressed[sf::Keyboard::Space] = true;
+            }
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+            if (!keysPressed[sf::Keyboard::R])
+            {
+                // Restart level
+                loadLevel(currentLevel, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+                keysPressed[sf::Keyboard::R] = true;
+            }
+        }
+
+        if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+            keysPressed[sf::Keyboard::Space] = false;
+        }
+        if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+            keysPressed[sf::Keyboard::R] = false;
         }
 
         // If circle is in the finish zone, go to the next level

@@ -16,6 +16,9 @@ void loadLevel(int levelID, std::vector<MyDrawable*> *drawables, MyDynamicCircle
     std::cout << "Loading level " << levelID << "..." << std::endl;
     LevelData levelData = levelsData[levelID];
 
+    // We just need to clear the windowStaticObjects vector because it only contains pointers to drawables which will be deleted in the drawables vector
+    windowStaticObjects->clear();
+
     //TODO do not close the windows that would be reused for the next level
     // Clear the windows
     for (auto window : windows)
@@ -143,8 +146,6 @@ void nextLevel(int& currentLevel, int maxLevel, std::vector<MyDrawable*> *drawab
         //TODO Add a Finish screen
         return;
     }
-    // We just need to clear the windowStaticObjects vector because it only contains pointers to drawables which will be deleted in the drawables vector
-    windowStaticObjects->clear();
     loadLevel(currentLevel, drawables, mainCircle, finish, windowStaticObjects, windows, windowsSettings, world, pixPerMeter);
 
 }
