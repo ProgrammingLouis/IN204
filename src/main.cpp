@@ -16,7 +16,8 @@
 #include "levels_manager.hpp"
 #include "virtual_method_classes.hpp"
 
-
+// Additinal SFML includes
+#include <SFML/Audio.hpp>
 #include <SFML/Window/Mouse.hpp>  // For desktop mouse position
 #include <SFML/Window/Keyboard.hpp>  // For keyboard input
 
@@ -41,34 +42,39 @@ int main()
     auto windowsSettings = sf::ContextSettings();
     windowsSettings.antialiasingLevel = 8;
 
-    int currentLevel = -1;
+    int currentLevel = 0;
 
 
     std::vector<MyWindow*> windows;
+    std::vector<MyStaticWindow*> staticWindows;
+    std::vector<MyForceFieldWindow*> forceFieldWindows;
+
+    struct windows windows_struct = {windows, staticWindows, forceFieldWindows, windowsSettings};
+    
     
     //TODO fix the window drag from the title bar 
 
     /* #region Loading windows for level 1 */
-    auto window = MyWindow(levelsData[0].videoModes[0], "MainWindow", sf::Style::Titlebar, windowsSettings);
+    auto window = new MyWindow(levelsData[0].videoModes[0], "MainWindow", sf::Style::Titlebar, windowsSettings);
     // mainWindow.setFramerateLimit(0);
-    window.setVerticalSyncEnabled(true);
-    window.setPosition(levelsData[0].windowPositions[0]);
-    windows.push_back(&window);
+    window->setVerticalSyncEnabled(true);
+    window->setPosition(levelsData[0].windowPositions[0]);
+    windows.push_back(window);
 
-    auto window1 = MyWindow(levelsData[0].videoModes[1], "Second window", sf::Style::Titlebar, windowsSettings);
+    auto window1 = new MyWindow(levelsData[0].videoModes[1], "Second window", sf::Style::Titlebar, windowsSettings);
     // secondWindow.setFramerateLimit(0);
-    window1.setVerticalSyncEnabled(true);
-    window1.setPosition(levelsData[0].windowPositions[1]);
-    windows.push_back(&window1);
+    window1->setVerticalSyncEnabled(true);
+    window1->setPosition(levelsData[0].windowPositions[1]);
+    windows.push_back(window1);
     /* #endregion */
 
-    // std::vector<MyWindow*> windows = {&mainWindow, &secondWindow};
+    /* #region textures and sprites definitions */
 
     // Load texture
     sf::Texture texture;
-    if (!texture.loadFromFile("imgs/SFML.png"))
+    if (!texture.loadFromFile("assets/imgs/SFML.png"))
     {
-        std::cerr << "Error loading texture 'imgs/SFML.png'" << std::endl;
+        std::cerr << "Error loading texture 'assets/imgs/SFML.png'" << std::endl;
         return 1;
     }
     texture.setSmooth(true);
@@ -77,9 +83,64 @@ int main()
     auto sprite = sf::Sprite(texture);
     sprite.setTexture(texture);
 
+    // Load screw head texture
+    sf::Texture screwHeadTexture;
+    if (!screwHeadTexture.loadFromFile("assets/imgs/screw_head.png"))
+    {
+        std::cerr << "Error loading texture 'assets/imgs/screw_head.png'" << std::endl;
+        return 1;
+    }
+    screwHeadTexture.setSmooth(true);
+
+    // Create a sprite
+    auto screwHeadSprite = sf::Sprite(screwHeadTexture);
+    screwHeadSprite.setTexture(screwHeadTexture);
+    screwHeadSprite.setOrigin(screwHeadSprite.getLocalBounds().width/2, screwHeadSprite.getLocalBounds().height/2);
+    screwHeadSprite.setScale(0.04, 0.04);
+    std::vector<float> screwHeadRotations;
+    for (int i = 0; i < 4; i++)
+    {
+        screwHeadRotations.push_back(rand()%360);
+    }
+    // screwHeadSprite.setScale(0.1, 0.1);
+    // screwHeadSprite.setRotation(45);
+
+    // Load force field texture
+    sf::Texture forceFieldTexture;
+    if (!forceFieldTexture.loadFromFile("assets/imgs/force_field.png"))
+    {
+        std::cerr << "Error loading texture 'assets/imgs/force_field.png'" << std::endl;
+        return 1;
+    }
+    forceFieldTexture.setRepeated(true);
+
+    // Create a sprite
+    auto forceFieldSprite = sf::Sprite(forceFieldTexture);
+    forceFieldSprite.setTexture(forceFieldTexture);
+    // forceFieldSprite.setOrigin(forceFieldSprite.getLocalBounds().width/2, forceFieldSprite.getLocalBounds().height/2);
+    forceFieldSprite.setScale(0.5, 0.5);
+
+    /* #endregion */
+
+    /* #region sounds */
+    // Load a sound to play
+    sf::SoundBuffer buffer;
+    if (!buffer.loadFromFile("assets/sounds/level_lost.ogg"))
+    {
+        std::cerr << "Error loading sound 'assets/sounds/assets/sounds/level_lost.ogg'" << std::endl;
+        return 1;
+    }
+
+    // Create a sound
+    sf::Sound sound;
+    sound.setBuffer(buffer);
+    sound.setVolume(50);
+
+    /* #endregion */
+    
 
     /* #region Box2D Init */
-    b2Vec2 gravity(0.0f, 100.0f);
+    b2Vec2 gravity(0.0f, 60.0f);
     b2World world(gravity);
     // world.SetAllowSleeping(true);
     // world.SetContinuousPhysics(true);
@@ -95,8 +156,10 @@ int main()
 
     /* #endregion */
     
+    /* #region objects definitions */
+
     std::vector<MyDrawable*> levelDrawables;
-    std::vector<MyWindowStaticObject*> levelWindowStaticObjects;
+    std::vector<MyWindowStaticObject*> levelWindowStaticObjects;  //! For objects that need to move with their window, hence who have the updatePositionIfDrag() method
     std::vector<MyDrawable*> allLevelDrawables;
     std::vector<MyDynamicObject*> levelDynamicObject; //TODO use this or delete it, and clear it in the levels_manager
 
@@ -104,30 +167,48 @@ int main()
     allLevelDrawables.push_back((MyDrawable*)mainCircle);
     levelDynamicObject.push_back((MyDynamicObject*)mainCircle);
 
-    MyFinish* finish = new MyFinish(sf::Vector2f(0, 0), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
+    MyFinish<MyWindow>* finish = new MyFinish<MyWindow>(sf::Vector2f(0, 0), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
     allLevelDrawables.push_back((MyDrawable*)finish);
 
+    struct gameObjects gameObjectsStruct = {&levelDrawables, mainCircle, finish, &levelWindowStaticObjects};
+
+    /* #endregion */
     // Load level 1
-    nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+    // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, staticWindows, forceFieldWindows, windowsSettings, world, pixPerMeter);
+    loadLevel(currentLevel, &gameObjectsStruct, &windows_struct, world, pixPerMeter);
+
+    // Add a static window
+    MyStaticWindow* staticWindow = new MyStaticWindow(sf::VideoMode(200, 200), "Static window", sf::Style::Titlebar, windowsSettings, sf::Vector2i(100, 100));
+    staticWindows.push_back(staticWindow);
+
+    // Add a force field window
+    MyForceFieldWindow* forceFieldWindow = new MyForceFieldWindow(sf::VideoMode(200, 200), "Force field window", sf::Style::Resize, windowsSettings);
+    forceFieldWindows.push_back(forceFieldWindow);
+
 
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     float deltaTime = 0.0f;
 
+
+    //*** MAIN LOOP ***//
     std::cout << "Starting main loop" << std::endl;
     bool allWindowsClosed = false;
+    int frameCount = 0;
     while (!allWindowsClosed)
     {
+        // std::cout << "Frame " << frameCount << std::endl;
+
         //!! Don't delete this
         // auto now = std::chrono::steady_clock::now();
         // deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime).count()*100.0f;
         // lastTime = now;
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(-200.0f, 0.0f), true);
+            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(-100.0f, 0.0f), true);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(200.0f, 0.0f), true);
+            mainCircle->body->ApplyLinearImpulseToCenter(b2Vec2(100.0f, 0.0f), true);
         }
 
         //TODO maybe delete this cause it will close even if Escape is pressed on another app
@@ -136,12 +217,20 @@ int main()
             {
                 window->close();
             }
+            for (auto& staticWindow : staticWindows)
+            {
+                staticWindow->close();
+            }
+            for (auto& forceFieldWindow : forceFieldWindows)
+            {
+                forceFieldWindow->close();
+            }
         }
         //TODO delete this for final game
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
             if (!keysPressed[sf::Keyboard::Space])
             {
-                nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+                nextLevel(currentLevel, levelsData.size()-1, &gameObjectsStruct, &windows_struct, world, pixPerMeter);
                 keysPressed[sf::Keyboard::Space] = true;
             }
         }
@@ -149,7 +238,7 @@ int main()
             if (!keysPressed[sf::Keyboard::R])
             {
                 // Restart level
-                loadLevel(currentLevel, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+                loadLevel(currentLevel, &gameObjectsStruct, &windows_struct, world, pixPerMeter);
                 keysPressed[sf::Keyboard::R] = true;
             }
         }
@@ -166,17 +255,20 @@ int main()
         if (mainCircle->body->GetLinearVelocity().Length() < 0.1f && finish->isInside(mainCircle->body->GetPosition()))
         {
             //TODO uncomment this for final game
-            // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, staticWindows, forceFieldWindows, windowsSettings, world, pixPerMeter);
         }
 
         // if mainCicle falls off the screen, restart the level
         if (mainCircle->body->GetPosition().y*pixPerMeter > desktopVideoMode.height || mainCircle->body->GetPosition().y*pixPerMeter < 0 || mainCircle->body->GetPosition().x*pixPerMeter > desktopVideoMode.width || mainCircle->body->GetPosition().x*pixPerMeter < 0)
         {
             // Restart level
-            loadLevel(currentLevel, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, windowsSettings, world, pixPerMeter);
+            std::cout << "Restarting level because mainCircle fell off the screen" << std::endl;
+            loadLevel(currentLevel, &gameObjectsStruct, &windows_struct, world, pixPerMeter);
+            sound.play();
         }
 
-
+        //!!
+        //TODO change this because window static objects that are in a static window do not need to be updated
         for (auto& winStaticObject : levelWindowStaticObjects)
         {
             winStaticObject->updatePositionIfDrag(pixPerMeter);
@@ -198,7 +290,7 @@ int main()
             bool winStartedDragging = window->pollEvents();
             if (winStartedDragging) std::cout << "Window " << winID << " started dragging" << std::endl;
             
-            window->updatePositionIfDrag(windows);
+            window->calculateNewPosDrag(windows, staticWindows);
 
             //!!
             //TODO determine object inside and outside the dragging window
@@ -207,21 +299,13 @@ int main()
             if (winStartedDragging) {
                 for (auto& dynamicObject : levelDynamicObject)
                 {
-                    //TODO MAYBE DO THIS EVERY FRAME
-                    // if object is in the window
-                    // if (dynamicObject->body->GetPosition().x*pixPerMeter > window->getPosition().x && dynamicObject->body->GetPosition().x*pixPerMeter < window->getPosition().x+window->getSize().x && dynamicObject->body->GetPosition().y*pixPerMeter > window->getPosition().y && dynamicObject->body->GetPosition().y*pixPerMeter < window->getPosition().y+window->getSize().y)
-                    // {
-                        dynamicObject->startDagPos = dynamicObject->body->GetPosition();
-                    //     dynamicObject->windowID = winID;
-                    // }
+                    dynamicObject->startDagPos = dynamicObject->body->GetPosition();
                 }
             }
 
             if (window->getIsDragging()) {
                 for (auto& dynamicObject : levelDynamicObject)
                 {
-                    // if (dynamicObject->windowID != winID) continue;
-                    //!! if window moves too fast the object can be left behind because it's not in the window anymore
                     if (dynamicObject->body->GetPosition().x*pixPerMeter > window->getPosition().x && dynamicObject->body->GetPosition().x*pixPerMeter < window->getPosition().x+window->getSize().x && dynamicObject->body->GetPosition().y*pixPerMeter > window->getPosition().y && dynamicObject->body->GetPosition().y*pixPerMeter < window->getPosition().y+window->getSize().y)
                     {
                         b2Vec2 bodyPosWithoutDelta = dynamicObject->body->GetPosition();
@@ -245,14 +329,68 @@ int main()
             winID++;
         }
 
-        /* #endregion */
+        // std::cout << staticWindows.size() << std::endl;
+        for (auto& staticWindow : staticWindows)
+        {
+            if (staticWindow->isOpen()) {
+                staticWindow->pollEvents();
+                staticWindow->resetPosition();
 
+                staticWindow->clear();
+                //TODO put this in a function
+                for (int i = 0; i < 2; i++)
+                {
+                    for (int j = 0; j < 2; j++)
+                    {
+                        int margin = 15;
+                        screwHeadSprite.setPosition(i*(staticWindow->getSize().x-2*margin)+margin, j*(staticWindow->getSize().y-2*margin)+margin);
+                        screwHeadSprite.setRotation(screwHeadRotations[i*2+j]);
+                        staticWindow->sf::RenderWindow::draw(screwHeadSprite);
+                    }
+                }
+                //TODO do not run draw on static objects for static windows
+                staticWindow->draw(levelDrawables, pixPerMeter);
+                staticWindow->draw(allLevelDrawables, pixPerMeter);
+                staticWindow->display();
+                allWindowsClosed = false;
+            }
+        }
+
+        for (auto& forceFieldWindow : forceFieldWindows)
+        {
+            if (forceFieldWindow->isOpen()) {
+                forceFieldWindow->pollEvents();
+                if (forceFieldWindow->getIsDragging()) {
+                    forceFieldWindow->setPosition(forceFieldWindow->startDragWindowPos+forceFieldWindow->mouseDelta);
+                }
+
+                forceFieldWindow->clear();
+                forceFieldWindow->draw(levelDrawables, pixPerMeter, forceFieldSprite);
+                forceFieldWindow->draw(allLevelDrawables, pixPerMeter, forceFieldSprite);
+                forceFieldWindow->display();
+                allWindowsClosed = false;
+            }
+        }
+
+        /* #endregion */
+        frameCount++;
     }
 
     // Free memory
+    //TODO Check if this is the right way to free memory
+
+    std::cout << "Clearing memory" << std::endl;
     for (auto& window : windows)
     {
         delete window;
+    }
+    for (auto& staticWindow : staticWindows)
+    {
+        delete staticWindow;
+    }
+    for (auto& forceFieldWindow : forceFieldWindows)
+    {
+        delete forceFieldWindow;
     }
     std::cout << "Cleared windows" << std::endl;
 
@@ -262,11 +400,8 @@ int main()
     }
     std::cout << "Cleared levelDrawables" << std::endl;
     
-    //TODO THis doesn't work is next levels, why ?
-    for (auto& drawable : allLevelDrawables)
-    {
-        delete drawable;
-    }
+    delete mainCircle;
+    delete finish;
     std::cout << "Cleared allLevelDrawables" << std::endl;
 
     return 0;
