@@ -160,36 +160,56 @@ int main()
 
     std::vector<MyDrawable*> levelDrawables;
     std::vector<MyWindowStaticObject*> levelWindowStaticObjects;  //! For objects that need to move with their window, hence who have the updatePositionIfDrag() method
-    std::vector<MyDrawable*> allLevelDrawables;
+    std::vector<MyDrawable*> allLevelDrawables; //TODO this is only used for the main circle, maybe delete it
     std::vector<MyDynamicObject*> levelDynamicObject; //TODO use this or delete it, and clear it in the levels_manager
+    std::vector<MyFinish<MyWindow>*> levelFinish;
+    std::vector<MyFinish<MyStaticWindow>*> levelFinishStatic;
 
-    MyDynamicCircle* mainCircle = new MyDynamicCircle(sf::Vector2f(540, 300), 20, world, pixPerMeter);
+    MyDynamicCircle* mainCircle = new MyDynamicCircle(sf::Vector2f(200, 200), 20, world, pixPerMeter);
     allLevelDrawables.push_back((MyDrawable*)mainCircle);
     levelDynamicObject.push_back((MyDynamicObject*)mainCircle);
 
-    MyFinish<MyWindow>* finish = new MyFinish<MyWindow>(sf::Vector2f(0, 0), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
-    allLevelDrawables.push_back((MyDrawable*)finish);
 
-    struct gameObjects gameObjectsStruct = {&levelDrawables, mainCircle, finish, &levelWindowStaticObjects};
+    MyFinish<MyWindow>* finish = new MyFinish<MyWindow>(sf::Vector2f(0, 0), sf::Vector2f(40, 20), world, pixPerMeter, *(windows[0]));
+    levelDrawables.push_back((MyDrawable*)finish);
+    levelFinish.push_back(finish);
+
+    struct gameObjects gameObjectsStruct = {&levelDrawables, mainCircle, &levelWindowStaticObjects, &levelDynamicObject, &levelFinish, &levelFinishStatic};
 
     /* #endregion */
     // Load level 1
     // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, finish, &levelWindowStaticObjects, windows, staticWindows, forceFieldWindows, windowsSettings, world, pixPerMeter);
     loadLevel(currentLevel, &gameObjectsStruct, &windows_struct, world, pixPerMeter);
 
-    // Add a static window
-    MyStaticWindow* staticWindow = new MyStaticWindow(sf::VideoMode(200, 200), "Static window", sf::Style::Titlebar, windowsSettings, sf::Vector2i(100, 100));
-    staticWindows.push_back(staticWindow);
+    // // Request focus for all windows
+    // for (auto& window : windows)
+    // {
+    //     window->requestFocus();
+    // }
+    // for (auto& staticWindow : staticWindows)
+    // {
+    //     staticWindow->requestFocus();
+    // }
+    // for (auto& forceFieldWindow : forceFieldWindows)
+    // {
+    //     forceFieldWindow->requestFocus();
+    // }
 
-    // Add a force field window
-    MyForceFieldWindow* forceFieldWindow = new MyForceFieldWindow(sf::VideoMode(200, 200), "Force field window", sf::Style::Resize, windowsSettings);
-    forceFieldWindows.push_back(forceFieldWindow);
 
+    MyDynamicBox* box = new MyDynamicBox(sf::Vector2f(350, 100), sf::Vector2f(20, 20), world, pixPerMeter);
+    levelDrawables.push_back((MyDrawable*)box);
+    levelDynamicObject.push_back((MyDynamicObject*)box);
 
+    // // Add a static window
+    // MyStaticWindow* staticWindow = new MyStaticWindow(sf::VideoMode(200, 200), "Static window", sf::Style::Titlebar, windowsSettings, sf::Vector2i(100, 100));
+    // staticWindows.push_back(staticWindow);
+
+    // // Add a force field window
+    // MyForceFieldWindow* forceFieldWindow0 = new MyForceFieldWindow0(sf::VideoMode(200, 200), "Force field window", sf::Style::Resize, windowsSettings);
+    // forceFieldWindows.push_back(forceFieldWindow0);
 
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     float deltaTime = 0.0f;
-
 
     //*** MAIN LOOP ***//
     std::cout << "Starting main loop" << std::endl;
@@ -238,6 +258,7 @@ int main()
             if (!keysPressed[sf::Keyboard::R])
             {
                 // Restart level
+                sound.play();
                 loadLevel(currentLevel, &gameObjectsStruct, &windows_struct, world, pixPerMeter);
                 keysPressed[sf::Keyboard::R] = true;
             }
@@ -250,13 +271,13 @@ int main()
             keysPressed[sf::Keyboard::R] = false;
         }
 
-        // If circle is in the finish zone, go to the next level
-        //TODO check if the finish box is right
-        if (mainCircle->body->GetLinearVelocity().Length() < 0.1f && finish->isInside(mainCircle->body->GetPosition()))
-        {
-            //TODO uncomment this for final game
-            // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, staticWindows, forceFieldWindows, windowsSettings, world, pixPerMeter);
-        }
+        // // If circle is in the finish zone, go to the next level
+        // //TODO check if the finish box is right
+        // if (mainCircle->body->GetLinearVelocity().Length() < 0.1f && finish->isInside(mainCircle->body->GetPosition()))
+        // {
+        //     //TODO uncomment this for final game
+        //     // nextLevel(currentLevel, levelsData.size()-1, &levelDrawables, mainCircle, &levelWindowStaticObjects, windows, staticWindows, forceFieldWindows, windowsSettings, world, pixPerMeter);
+        // }
 
         // if mainCicle falls off the screen, restart the level
         if (mainCircle->body->GetPosition().y*pixPerMeter > desktopVideoMode.height || mainCircle->body->GetPosition().y*pixPerMeter < 0 || mainCircle->body->GetPosition().x*pixPerMeter > desktopVideoMode.width || mainCircle->body->GetPosition().x*pixPerMeter < 0)
@@ -267,21 +288,53 @@ int main()
             sound.play();
         }
 
+        std::cout << "line 291" << std::endl;
         //!!
         //TODO change this because window static objects that are in a static window do not need to be updated
         for (auto& winStaticObject : levelWindowStaticObjects)
         {
             winStaticObject->updatePositionIfDrag(pixPerMeter);
         }
-        finish->updatePositionIfDrag(pixPerMeter);
+        // finish->updatePositionIfDrag(pixPerMeter);
+        for (auto& finish : levelFinish)
+        {
+            finish->updatePositionIfDrag(pixPerMeter);
+        }
 
+        std::cout << "line 304" << std::endl;
 
+        // Apply upward force to all levelDynamicObject in all forceFieldWindows
+        //TODO optimize this, calculate the object current windows only once per frame
+        for (auto& forceFieldWindow : forceFieldWindows)
+        {
+            if (forceFieldWindow->isOpen()) {
+                std::cout << "forceFieldWindow is open" << std::endl;
+                for (auto& dynamicObject : levelDynamicObject)
+                {
+                    std::cout << "getting forceFieldWindow position" << std::endl;
+                    const sf::Vector2i winPos = forceFieldWindow->getPosition();
+                    std::cout << "winPos: " << winPos.x << ", " << winPos.y << std::endl;
+                    auto dynamicObjectPos = dynamicObject->body->GetPosition();
+                    std::cout << "dynamicObjectPos: " << dynamicObjectPos.x*pixPerMeter << ", " << dynamicObjectPos.y*pixPerMeter << std::endl;
+                    if (dynamicObject->body->GetPosition().x*pixPerMeter > winPos.x && dynamicObject->body->GetPosition().x*pixPerMeter < winPos.x+forceFieldWindow->getSize().x && dynamicObject->body->GetPosition().y*pixPerMeter > winPos.y && dynamicObject->body->GetPosition().y*pixPerMeter < winPos.y+forceFieldWindow->getSize().y)
+                    {
+                    std::cout << "Applying force to dynamicObject" << std::endl;
+                        // apply a force to mainCricle
+                        dynamicObject->body->ApplyForceToCenter(b2Vec2(0.0f, -100.0f*dynamicObject->body->GetMass()), true);
+                    }
+                }
+            }
+        }
+
+        std::cout << "line 322" << std::endl;
 
         // // apply a force to mainCricle to offset gravity
         // mainCircle->body->ApplyForceToCenter(b2Vec2(0.0f, -100.0f*mainCircle->body->GetMass()), true);
         
         world.Step(timeStep, velocityIterations, positionIterations);
         
+        std::cout << "line 329" << std::endl;
+
         /* #region Windows update */
         allWindowsClosed = true;
         int winID =0;
@@ -373,6 +426,9 @@ int main()
         }
 
         /* #endregion */
+        
+        std::cout << "line 423" << std::endl;
+
         frameCount++;
     }
 

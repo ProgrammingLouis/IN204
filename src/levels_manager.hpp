@@ -19,10 +19,12 @@ struct windows {
 };
 
 struct gameObjects {
-    std::vector<MyDrawable*> *drawables;
+    std::vector<MyDrawable*>* drawables;
     MyDynamicCircle* mainCircle;
-    MyFinish<MyWindow>* finish;
-    std::vector<MyWindowStaticObject*> *windowStaticObjects;
+    std::vector<MyWindowStaticObject*>* windowStaticObjects;
+    std::vector<MyDynamicObject*>* levelDynamicObject;
+    std::vector<MyFinish<MyWindow>*>* finishes;
+    std::vector<MyFinish<MyStaticWindow>*>* finishesStatic;
 };
 
 
@@ -68,6 +70,15 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
             continue;
         delete drawable;
     }
+
+    gameObjects_struct->levelDynamicObject->clear();
+    gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)gameObjects_struct->mainCircle);
+
+    // Clear finishes
+    // !! We do not delete the finishes because they are already supposed to be deleted in the drawables vector
+
+    gameObjects_struct->finishes->clear();
+    gameObjects_struct->finishesStatic->clear();
 
     gameObjects_struct->drawables->clear();
     gameObjects_struct->drawables->push_back((MyDrawable*)gameObjects_struct->mainCircle);
@@ -121,6 +132,7 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
     {
         std::cout << "Creating static window " << windowID << " from existing object" << std::endl;
         windows_struct->staticWindows[windowID]->create(levelData.staticVideoModes[windowID], "Static Window " + std::to_string(windowID), sf::Style::Titlebar, windows_struct->windowsSettings);
+        //!! When we call create on a window we need to reset vertical sync enabled
         windows_struct->staticWindows[windowID]->setVerticalSyncEnabled(true);
         windows_struct->staticWindows[windowID]->setPosition(levelData.staticWindowPositions[windowID]);
     }
@@ -133,7 +145,8 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         forceFieldWindowsToBeCreated = windows_struct->forceFieldWindows.size();
         for (int windowID = windows_struct->forceFieldWindows.size(); windowID < levelData.numberOfForceFieldWindows; windowID++)
         {
-            auto thisWindow = new MyForceFieldWindow(levelData.forceFieldVideoModes[windowID], "Force Field Window", sf::Style::Titlebar, windows_struct->windowsSettings);
+            auto thisWindow = new MyForceFieldWindow(levelData.forceFieldVideoModes[windowID], "Force Field Window", sf::Style::Resize, windows_struct->windowsSettings);
+            thisWindow->setPosition(levelData.forceFieldWindowPositions[windowID]);
             windows_struct->forceFieldWindows.push_back(thisWindow);
             std::cout << "Create new force field window object for window " << windowID << std::endl;
         }
@@ -143,7 +156,7 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
     for (int windowID = 0; windowID < forceFieldWindowsToBeCreated; windowID++)
     {
         std::cout << "Creating force field window " << windowID << " from existing object" << std::endl;
-        windows_struct->forceFieldWindows[windowID]->create(levelData.forceFieldVideoModes[windowID], "Force Field Window " + std::to_string(windowID), sf::Style::Titlebar, windows_struct->windowsSettings);
+        windows_struct->forceFieldWindows[windowID]->create(levelData.forceFieldVideoModes[windowID], "Force Field Window " + std::to_string(windowID), sf::Style::Resize, windows_struct->windowsSettings);
         windows_struct->forceFieldWindows[windowID]->setVerticalSyncEnabled(true);
         windows_struct->forceFieldWindows[windowID]->setPosition(levelData.forceFieldWindowPositions[windowID]);
     }
@@ -159,7 +172,18 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         // If main circle is placed on a finish or a window static object we need to add an offset to the position
         if (placedOnDrawableData.type == WINDOW_STATIC_BOX)
         {
-            winOffset = windows_struct->windows[placedOnDrawableData.windowID]->getPosition();
+            if (placedOnDrawableData.windowID < levelData.numberOfWindows)
+            {
+                winOffset = windows_struct->windows[placedOnDrawableData.windowID]->getPosition();
+            }
+            else if (placedOnDrawableData.windowID < levelData.numberOfWindows + levelData.numberOfStaticWindows)
+            {
+                winOffset = windows_struct->staticWindows[placedOnDrawableData.windowID - levelData.numberOfWindows]->getPosition();
+            }
+            else
+            {
+                std::cerr << "Unknown window id" << std::endl;
+            }
         }
         gameObjects_struct->mainCircle->body->SetTransform(b2Vec2((placedOnDrawableData.position.x+winOffset.x)/pixPerMeter, (placedOnDrawableData.position.y+winOffset.y-MAIN_CIRCLE_RADIUS)/pixPerMeter), 0);
     }
@@ -172,8 +196,20 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
     gameObjects_struct->mainCircle->body->SetAngularVelocity(0);
     /* #endregion */
 
-    /* #region set new finish position */
-    gameObjects_struct->finish->setBodyPosition(levelData.finishWinPosition, pixPerMeter);
+    /* #region create new finishes */
+    for (int finishID = 0; finishID < levelData.numberOfFinish; finishID++)
+    {
+        auto finish = new MyFinish<MyWindow>(levelData.finishWinPosition[finishID], sf::Vector2f(40, 20), world, pixPerMeter, *windows_struct->windows[levelData.finishWinID[finishID]]);
+        gameObjects_struct->drawables->push_back((MyDrawable*)finish);
+        gameObjects_struct->finishes->push_back(finish);
+    }
+
+    for (int finishID = 0; finishID < levelData.numberOfFinishStatic; finishID++)
+    {
+        auto finish = new MyFinish<MyStaticWindow>(levelData.finishStaticWinPosition[finishID], sf::Vector2f(40, 20), world, pixPerMeter, *windows_struct->staticWindows[levelData.finishStaticWinID[finishID]]);
+        gameObjects_struct->drawables->push_back((MyDrawable*)finish);
+        gameObjects_struct->finishesStatic->push_back(finish);
+    }
     /* #endregion */
 
     /* #region Create new drawables */ 
@@ -182,7 +218,7 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         MyDrawableData drawableData = levelData.drawablesData[drawableID];
         if (drawableData.type == WINDOW_STATIC_BOX)
         {
-            if (drawableData.windowID < windows_struct->windows.size())
+            if (drawableData.windowID < levelData.numberOfWindows)
             {
                 auto winStaticBox = new MyWindowStaticBox<MyWindow>(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, *windows_struct->windows[drawableData.windowID]);
                 gameObjects_struct->drawables->push_back((MyDrawable*)winStaticBox);
@@ -190,9 +226,9 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
                 continue;
             }
 
-            if (drawableData.windowID < windows_struct->windows.size() + windows_struct->staticWindows.size())
+            if (drawableData.windowID < levelData.numberOfWindows + levelData.numberOfStaticWindows)
             {
-                auto winStaticBox = new MyWindowStaticBox<MyStaticWindow>(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, *windows_struct->staticWindows[drawableData.windowID - windows_struct->windows.size()]);
+                auto winStaticBox = new MyWindowStaticBox<MyStaticWindow>(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, *windows_struct->staticWindows[drawableData.windowID - levelData.numberOfWindows]);
                 gameObjects_struct->drawables->push_back((MyDrawable*)winStaticBox);
                 //! We do not add the window static object to the windowStaticObjects vector because we do not want to update the position of the static windows
                 continue;
@@ -210,11 +246,13 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         {
             auto dynamicBox = new MyDynamicBox(drawableData.position, drawableData.size, world, pixPerMeter);
             gameObjects_struct->drawables->push_back((MyDrawable*)dynamicBox);
+            gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicBox);
         }
         else if (drawableData.type == DYNAMIC_CIRCLE)
         {
             auto dynamicCircle = new MyDynamicCircle(drawableData.position, drawableData.size.x, world, pixPerMeter);
             gameObjects_struct->drawables->push_back((MyDrawable*)dynamicCircle);
+            gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicCircle);
         }
         else
         {

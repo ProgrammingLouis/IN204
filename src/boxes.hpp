@@ -8,7 +8,7 @@
 #include "window.hpp"
 
 
-class MyDynamicBox : MyDrawable
+class MyDynamicBox : MyDrawable, public MyDynamicObject
 {
     public:
         // SFML shape
@@ -21,7 +21,7 @@ class MyDynamicBox : MyDrawable
 
         // Box2D objects
         b2BodyDef bodyDef;
-        b2Body* body;
+        // b2Body* body; //!! This is already defined in the DynamicObject class, so that we can access it from the the casted object
         b2PolygonShape PolygonShape;
         b2FixtureDef fixtureDef;
 

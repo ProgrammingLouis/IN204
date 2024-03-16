@@ -80,7 +80,7 @@ class MyFinish<MyWindow> : MyDrawable, MyWindowStaticObject
 
 
 template <>
-class MyFinish<MyStaticWindow> : MyDrawable, MyWindowStaticObject
+class MyFinish<MyStaticWindow> : MyDrawable
 {
     private:
         MyWindowStaticBox<MyStaticWindow> leftBox;
