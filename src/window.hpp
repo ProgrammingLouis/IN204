@@ -40,7 +40,7 @@ class MyWindowBase : public sf::RenderWindow
 class MyStaticWindow : public MyWindowBase
 {
     public:
-        const sf::Vector2i winPos;
+        sf::Vector2i winPos;
 
         MyStaticWindow(const sf::VideoMode& videoMode, const std::string& title, sf::Uint32 style, const sf::ContextSettings& settings, const sf::Vector2i winPos) : MyWindowBase(videoMode, title, style, settings), winPos(winPos)
         {
@@ -183,19 +183,24 @@ class MyForceFieldWindow : public MyDraggableWindow
     private:
        sf::IntRect forceFieldRect; 
     public:
-        MyForceFieldWindow(const sf::VideoMode& videoMode, const std::string& title, sf::Uint32 style, const sf::ContextSettings& settings) : MyDraggableWindow(videoMode, title, style, settings)
+        float angle;
+
+        MyForceFieldWindow(const sf::VideoMode& videoMode, float angle, const std::string& title, sf::Uint32 style, const sf::ContextSettings& settings) : MyDraggableWindow(videoMode, title, style, settings), angle(angle)
         {
-            forceFieldRect = sf::IntRect(0, 0, videoMode.width*2, videoMode.height*2);
+            forceFieldRect = sf::IntRect(0, 0, std::max(videoMode.width, videoMode.height)*3,std::max(videoMode.width, videoMode.height)*3);
 
             eventHandlers[sf::Event::Resized] = [this](sf::Event event) {
                 setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-                forceFieldRect = sf::IntRect(0, 0, event.size.width*2, event.size.height*2);
+                forceFieldRect = sf::IntRect(0, 0, std::max(event.size.width, event.size.height)*3, std::max(event.size.width, event.size.height)*3);
             };
         }
 
         void draw(std::vector<MyDrawable*> drawables, float pixPerMeter, sf::Sprite forceFieldSprite) {
             //TODO test if having just one a force field sprite is a good idea
             forceFieldSprite.setTextureRect(forceFieldRect); // maybe dont do that each frame
+            forceFieldSprite.setOrigin(forceFieldRect.width/2, forceFieldRect.height/2);
+            forceFieldSprite.setPosition(getSize().x/2, getSize().y/2);
+            forceFieldSprite.setRotation(angle);
             MyDraggableWindow::draw(drawables, pixPerMeter);
             sf::RenderWindow::draw(forceFieldSprite);
         }

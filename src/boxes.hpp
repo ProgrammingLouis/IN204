@@ -222,6 +222,8 @@ class MyWindowStaticBox<MyWindow> : MyDrawable, MyWindowStaticObject
 
             // Only draw the object if it is inside the window
             // TODO optimize visibility by getting only the overlapping windows to draw the object
+            //!!!!!!!!
+            // TODO This does not work for rotated objetcs
             if (posOnWin.x+screenHalfSize.x > 0 && posOnWin.x-screenHalfSize.x < winSize.x && posOnWin.y+screenHalfSize.y > 0 && posOnWin.y-screenHalfSize.y < winSize.y)
             {
                 shape.setPosition(posOnWin);

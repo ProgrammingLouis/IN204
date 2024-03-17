@@ -15,6 +15,8 @@
 #include "levels_data.hpp"
 #include "levels_manager.hpp"
 #include "virtual_method_classes.hpp"
+#include "portals.hpp"
+
 
 // Additinal SFML includes
 #include <SFML/Audio.hpp>
@@ -117,8 +119,14 @@ int main()
     // Create a sprite
     auto forceFieldSprite = sf::Sprite(forceFieldTexture);
     forceFieldSprite.setTexture(forceFieldTexture);
-    // forceFieldSprite.setOrigin(forceFieldSprite.getLocalBounds().width/2, forceFieldSprite.getLocalBounds().height/2);
+    forceFieldSprite.setOrigin(forceFieldSprite.getLocalBounds().width/2, forceFieldSprite.getLocalBounds().height/2);
     forceFieldSprite.setScale(0.5, 0.5);
+
+
+    // Portal textures
+    PortalTextures_struct portalTextures;
+    loadPortalTextures(portalTextures);
+
 
     /* #endregion */
 
@@ -137,7 +145,6 @@ int main()
     sound.setVolume(50);
 
     /* #endregion */
-    
 
     /* #region Box2D Init */
     b2Vec2 gravity(0.0f, 60.0f);
@@ -288,7 +295,7 @@ int main()
             sound.play();
         }
 
-        std::cout << "line 291" << std::endl;
+        // std::cout << "line 291" << std::endl;
         //!!
         //TODO change this because window static objects that are in a static window do not need to be updated
         for (auto& winStaticObject : levelWindowStaticObjects)
@@ -301,39 +308,39 @@ int main()
             finish->updatePositionIfDrag(pixPerMeter);
         }
 
-        std::cout << "line 304" << std::endl;
+        // std::cout << "line 304" << std::endl;
 
         // Apply upward force to all levelDynamicObject in all forceFieldWindows
         //TODO optimize this, calculate the object current windows only once per frame
         for (auto& forceFieldWindow : forceFieldWindows)
         {
             if (forceFieldWindow->isOpen()) {
-                std::cout << "forceFieldWindow is open" << std::endl;
+                // std::cout << "forceFieldWindow is open" << std::endl;
                 for (auto& dynamicObject : levelDynamicObject)
                 {
-                    std::cout << "getting forceFieldWindow position" << std::endl;
+                    // std::cout << "getting forceFieldWindow position" << std::endl;
                     const sf::Vector2i winPos = forceFieldWindow->getPosition();
-                    std::cout << "winPos: " << winPos.x << ", " << winPos.y << std::endl;
+                    // std::cout << "winPos: " << winPos.x << ", " << winPos.y << std::endl;
                     auto dynamicObjectPos = dynamicObject->body->GetPosition();
-                    std::cout << "dynamicObjectPos: " << dynamicObjectPos.x*pixPerMeter << ", " << dynamicObjectPos.y*pixPerMeter << std::endl;
+                    // std::cout << "dynamicObjectPos: " << dynamicObjectPos.x*pixPerMeter << ", " << dynamicObjectPos.y*pixPerMeter << std::endl;
                     if (dynamicObject->body->GetPosition().x*pixPerMeter > winPos.x && dynamicObject->body->GetPosition().x*pixPerMeter < winPos.x+forceFieldWindow->getSize().x && dynamicObject->body->GetPosition().y*pixPerMeter > winPos.y && dynamicObject->body->GetPosition().y*pixPerMeter < winPos.y+forceFieldWindow->getSize().y)
                     {
-                    std::cout << "Applying force to dynamicObject" << std::endl;
+                    // std::cout << "Applying force to dynamicObject" << std::endl;
                         // apply a force to mainCricle
-                        dynamicObject->body->ApplyForceToCenter(b2Vec2(0.0f, -100.0f*dynamicObject->body->GetMass()), true);
+                        dynamicObject->body->ApplyForceToCenter(b2Vec2(0.0f+100.0f*dynamicObject->body->GetMass()*std::sin(forceFieldWindow->angle*3.14159/180), -100.0f*dynamicObject->body->GetMass()*std::cos(forceFieldWindow->angle*3.14159/180)), true);
                     }
                 }
             }
         }
 
-        std::cout << "line 322" << std::endl;
+        // std::cout << "line 322" << std::endl;
 
         // // apply a force to mainCricle to offset gravity
         // mainCircle->body->ApplyForceToCenter(b2Vec2(0.0f, -100.0f*mainCircle->body->GetMass()), true);
         
         world.Step(timeStep, velocityIterations, positionIterations);
         
-        std::cout << "line 329" << std::endl;
+        // std::cout << "line 329" << std::endl;
 
         /* #region Windows update */
         allWindowsClosed = true;
@@ -427,7 +434,7 @@ int main()
 
         /* #endregion */
         
-        std::cout << "line 423" << std::endl;
+        // std::cout << "line 423" << std::endl;
 
         frameCount++;
     }

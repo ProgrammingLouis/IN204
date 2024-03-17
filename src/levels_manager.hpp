@@ -135,6 +135,8 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         //!! When we call create on a window we need to reset vertical sync enabled
         windows_struct->staticWindows[windowID]->setVerticalSyncEnabled(true);
         windows_struct->staticWindows[windowID]->setPosition(levelData.staticWindowPositions[windowID]);
+        windows_struct->staticWindows[windowID]->winPos = levelData.staticWindowPositions[windowID];
+        std::cout << "Static window " << windowID << " created at position " << levelData.staticWindowPositions[windowID].x << " " << levelData.staticWindowPositions[windowID].y << std::endl;
     }
 
     // Create new force field windows
@@ -145,7 +147,7 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         forceFieldWindowsToBeCreated = windows_struct->forceFieldWindows.size();
         for (int windowID = windows_struct->forceFieldWindows.size(); windowID < levelData.numberOfForceFieldWindows; windowID++)
         {
-            auto thisWindow = new MyForceFieldWindow(levelData.forceFieldVideoModes[windowID], "Force Field Window", sf::Style::Resize, windows_struct->windowsSettings);
+            auto thisWindow = new MyForceFieldWindow(levelData.forceFieldVideoModes[windowID], levelData.forceFieldAngles[windowID], "Force Field Window", sf::Style::Resize, windows_struct->windowsSettings);
             thisWindow->setPosition(levelData.forceFieldWindowPositions[windowID]);
             windows_struct->forceFieldWindows.push_back(thisWindow);
             std::cout << "Create new force field window object for window " << windowID << std::endl;
@@ -159,6 +161,8 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         windows_struct->forceFieldWindows[windowID]->create(levelData.forceFieldVideoModes[windowID], "Force Field Window " + std::to_string(windowID), sf::Style::Resize, windows_struct->windowsSettings);
         windows_struct->forceFieldWindows[windowID]->setVerticalSyncEnabled(true);
         windows_struct->forceFieldWindows[windowID]->setPosition(levelData.forceFieldWindowPositions[windowID]);
+        windows_struct->forceFieldWindows[windowID]->angle = levelData.forceFieldAngles[windowID];
+
     }
 
     /* #endregion */

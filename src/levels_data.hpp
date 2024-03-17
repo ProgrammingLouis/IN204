@@ -21,7 +21,8 @@ struct MyDrawableData {
     float density;
     float friction;
     float restitution;
-    int windowID;
+    int windowID; //!! windowID is the index of the window in the windows vector OR in the staticWindows vector OR in the forceFieldWindows vector
+                  //!! such as the first index in windows vector is 0, the first index in staticWindows vector is numberOfWindows, the first index in forceFieldWindows vector is numberOfWindows + numberOfStaticWindows
 };
 
 struct LevelData {
@@ -36,6 +37,7 @@ struct LevelData {
     int numberOfForceFieldWindows;
     std::vector<sf::VideoMode> forceFieldVideoModes;
     std::vector<sf::Vector2i> forceFieldWindowPositions;
+    std::vector<float> forceFieldAngles;
 
     std::vector<MyDrawableData> drawablesData;
     sf::Vector2i mainCirclePosition; // NOT USED if mainCirclePlacedOn != -1
@@ -71,6 +73,7 @@ std::vector<LevelData> levelsData = {
         0, // numberOfForceFieldWindows
         {}, // forceFieldVideoModes
         {}, // forceFieldWindowPositions
+        {}, // forceFieldAngles
 
         // drawablesData
         {
@@ -117,6 +120,7 @@ std::vector<LevelData> levelsData = {
         0, // numberOfForceFieldWindows
         {}, // forceFieldVideoModes
         {}, // forceFieldWindowPositions
+        {}, // forceFieldAngles
 
         // drawablesData
         // drawablesData format :
@@ -161,6 +165,7 @@ std::vector<LevelData> levelsData = {
         1, // numberOfForceFieldWindows
         {sf::VideoMode(200, 150)}, // forceFieldVideoModes
         {sf::Vector2i(1680-200-50, 1050-150-50)}, // forceFieldWindowPositions
+        {0}, // forceFieldAngles
 
         // drawablesData
         // drawablesData format :
@@ -212,6 +217,7 @@ std::vector<LevelData> levelsData = {
         1, // numberOfForceFieldWindows
         {sf::VideoMode(200, 150)}, // forceFieldVideoModes
         {sf::Vector2i(1680-200-50, 1050-150-50)}, // forceFieldWindowPositions
+        {0}, // forceFieldAngles
 
         // drawablesData
         // drawablesData format :
@@ -255,12 +261,13 @@ std::vector<LevelData> levelsData = {
         0, // numberOfForceFieldWindows
         {}, // forceFieldVideoModes
         {}, // forceFieldWindowPositions
+        {}, // forceFieldAngles
 
         // drawablesData
         // drawablesData format :
         // {type, position, size, angle, density, friction, restitution, windowID}
         {
-            {WINDOW_STATIC_BOX, sf::Vector2f(150, 150), sf::Vector2f(60, 10), 0, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(100, 100), sf::Vector2f(60, 10), 0, 0, 0, 0, 1},
             // {WINDOW_STATIC_BOX, sf::Vector2f(295, 115), sf::Vector2f(50, 8), -35, 0, 0, 0, 1},
             // {WINDOW_STATIC_BOX, sf::Vector2f(105, 115), sf::Vector2f(50, 8), 35, 0, 0, 0, 1}
         },
@@ -277,7 +284,48 @@ std::vector<LevelData> levelsData = {
         3, // numberOfFinishStatic
         {sf::Vector2f(100.0, 150.0), sf::Vector2f(200.0, 150.0), sf::Vector2f(300.0, 150.0)}, // finishStaticWinPosition
         {1, 1, 1} // finishStaticWinID
-     }
+     },
+
+     // Level 5
+    {
+        1, // numberOfWindows
+
+        // videoModes
+        {sf::VideoMode(400, 300)},
+
+        // windowPositions
+        {sf::Vector2i(100, 100)},
+
+        0, // numberOfStaticWindows
+        {}, // staticVideoModes
+        {}, // staticWindowPositions
+
+        1, // numberOfForceFieldWindows
+        {sf::VideoMode(200, 150)}, // forceFieldVideoModes
+        {sf::Vector2i(1680-200-50, 1050-150-50)}, // forceFieldWindowPositions
+        {-30}, // forceFieldAngles
+
+        // drawablesData
+        {
+            // drawablesData format :
+            // {type, position, size, angle, density, friction, restitution, windowID}
+            //
+            // window static box at the middle of window 0
+            {WINDOW_STATIC_BOX, sf::Vector2f(300, 200), sf::Vector2f(40, 10), 0, 0, 0, 0, 0}
+        },
+
+        {0, 0}, // mainCirclePosition
+        0, // mainCirclePlacedOn
+        // {80, 100}, // finishWinPosition
+        // 0 // finishWinID
+        1, // numberOfFinish
+        {sf::Vector2f(80.0, 100.0)}, // finishWinPosition
+        {0}, // finishWinID
+
+        0, // numberOfFinishStatic
+        {}, // finishStaticWinPosition
+        {} // finishStaticWinID
+    }
 
 //     // New level 3
 //     {
