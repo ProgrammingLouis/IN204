@@ -31,6 +31,12 @@ struct gameObjects {
 void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windows* windows_struct, b2World& world, float pixPerMeter)
 {
     std::cout << "Loading level " << levelID << "..." << std::endl;
+    if (levelID < 0 || levelID >= levelsData.size())
+    {
+        // std::cerr << "Level " << levelID << " does not exist" << std::endl;
+        std::cout << "Level " << levelID << " does not exist" << std::endl;
+        return;
+    }
     LevelData levelData = levelsData[levelID];
 
     // We just need to clear the windowStaticObjects vector because it only contains pointers to drawables which will be deleted in the drawables vector
@@ -241,27 +247,49 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
             std::cerr << "Unknown window id" << std::endl;
             break;
         }
-        else if (drawableData.type == STATIC_BOX)
-        {
-            auto staticBox = new MyStaticBox(drawableData.position, drawableData.size, world, pixPerMeter);
-            gameObjects_struct->drawables->push_back((MyDrawable*)staticBox);
-        }
-        else if (drawableData.type == DYNAMIC_BOX)
-        {
-            auto dynamicBox = new MyDynamicBox(drawableData.position, drawableData.size, world, pixPerMeter);
-            gameObjects_struct->drawables->push_back((MyDrawable*)dynamicBox);
-            gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicBox);
-        }
-        else if (drawableData.type == DYNAMIC_CIRCLE)
-        {
-            auto dynamicCircle = new MyDynamicCircle(drawableData.position, drawableData.size.x, world, pixPerMeter);
-            gameObjects_struct->drawables->push_back((MyDrawable*)dynamicCircle);
-            gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicCircle);
-        }
         else
         {
-            std::cerr << "Unknown drawable type" << std::endl;
-            break;
+            sf::Vector2f screenPosition = drawableData.position;
+            if (drawableData.windowID != -1)
+            {
+                if (drawableData.windowID < levelData.numberOfWindows)
+                {
+                    screenPosition = screenPosition + (sf::Vector2f)windows_struct->windows[drawableData.windowID]->getPosition();
+                }
+                else if (drawableData.windowID < levelData.numberOfWindows + levelData.numberOfStaticWindows)
+                {
+                    screenPosition = screenPosition + (sf::Vector2f)windows_struct->staticWindows[drawableData.windowID - levelData.numberOfWindows]->getPosition();
+                }
+                else
+                {
+                    std::cerr << "Unknown window id" << std::endl;
+                    break;
+                }
+            }
+
+
+            if (drawableData.type == STATIC_BOX)
+            {
+                auto staticBox = new MyStaticBox(screenPosition, drawableData.size, world, pixPerMeter);
+                gameObjects_struct->drawables->push_back((MyDrawable*)staticBox);
+            }
+            else if (drawableData.type == DYNAMIC_BOX)
+            {
+                auto dynamicBox = new MyDynamicBox(screenPosition, drawableData.size, world, pixPerMeter);
+                gameObjects_struct->drawables->push_back((MyDrawable*)dynamicBox);
+                gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicBox);
+            }
+            else if (drawableData.type == DYNAMIC_CIRCLE)
+            {
+                auto dynamicCircle = new MyDynamicCircle(screenPosition, drawableData.size.x, world, pixPerMeter);
+                gameObjects_struct->drawables->push_back((MyDrawable*)dynamicCircle);
+                gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicCircle);
+            }
+            else
+            {
+                std::cerr << "Unknown drawable type" << std::endl;
+                break;
+            }
         }
     }
     /* #endregion */

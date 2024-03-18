@@ -23,6 +23,7 @@ struct MyDrawableData {
     float restitution;
     int windowID; //!! windowID is the index of the window in the windows vector OR in the staticWindows vector OR in the forceFieldWindows vector
                   //!! such as the first index in windows vector is 0, the first index in staticWindows vector is numberOfWindows, the first index in forceFieldWindows vector is numberOfWindows + numberOfStaticWindows
+                  //* For non window static objects, if windowID == -1 then the position is in the screen space
 };
 
 struct LevelData {
@@ -84,7 +85,9 @@ std::vector<LevelData> levelsData = {
             {WINDOW_STATIC_BOX, sf::Vector2f(200, 200), sf::Vector2f(40, 10), 0, 0, 0, 0, 0},
             {WINDOW_STATIC_BOX, sf::Vector2f(290, 210), sf::Vector2f(60, 10), 10, 0, 0, 0, 0},
             {WINDOW_STATIC_BOX, sf::Vector2f(170, 150), sf::Vector2f(40, 10), 0, 0, 0, 0, 1},
-            {WINDOW_STATIC_BOX, sf::Vector2f(260, 160), sf::Vector2f(60, 10), 10, 0, 0, 0, 1}
+            {WINDOW_STATIC_BOX, sf::Vector2f(260, 160), sf::Vector2f(60, 10), 10, 0, 0, 0, 1},
+            {DYNAMIC_BOX, sf::Vector2f(185, 120), sf::Vector2f(30, 30), 0, 0, 0, 0, 1} // Dynamic box on top of second window static box
+
         },
 
         {0, 0}, // mainCirclePosition
@@ -147,20 +150,19 @@ std::vector<LevelData> levelsData = {
 
     // Level 2
     {
-        3, // numberOfWindows
-        // 2, // numberOfWindows
+        1, // numberOfWindows
 
         // videoModes
-        {sf::VideoMode(400, 300), sf::VideoMode(400, 300)},
+        {sf::VideoMode(400, 300)},
         // {sf::VideoMode(400, 300), sf::VideoMode(400, 300)},
 
         // windowPositions
-        {sf::Vector2i(100, 300), sf::Vector2i(800, 100)},
+        {sf::Vector2i(800, 100)},
         // {sf::Vector2i(100, 400), sf::Vector2i(800, 200)},
 
-        0, // numberOfStaticWindows
-        {}, // staticVideoModes
-        {}, // staticWindowPositions
+        1, // numberOfStaticWindows
+        {sf::VideoMode(400, 300)}, // staticVideoModes
+        {sf::Vector2i(50, 300)}, // staticWindowPositions
 
         1, // numberOfForceFieldWindows
         {sf::VideoMode(200, 150)}, // forceFieldVideoModes
@@ -172,16 +174,16 @@ std::vector<LevelData> levelsData = {
         // {type, position, size, angle, density, friction, restitution, windowID}
         {
             // {WINDOW_STATIC_BOX, sf::Vector2f(200, 140), sf::Vector2f(60, 10), 0, 0, 0, 0, 0},
-            {WINDOW_STATIC_BOX, sf::Vector2f(70, 115), sf::Vector2f(40, 8), 0, 0, 0, 0, 0},
-            {WINDOW_STATIC_BOX, sf::Vector2f(330, 115), sf::Vector2f(40, 8), 0, 0, 0, 0, 0},
-            {WINDOW_STATIC_BOX, sf::Vector2f(10, 240), sf::Vector2f(80, 10), 90, 0, 0, 0, 0},
-            {WINDOW_STATIC_BOX, sf::Vector2f(390, 240), sf::Vector2f(80, 10), 90, 0, 0, 0, 0},
-            {WINDOW_STATIC_BOX, sf::Vector2f(290, 115), sf::Vector2f(108, 8), 30, 0, 0, 0, 0},
-            {WINDOW_STATIC_BOX, sf::Vector2f(110, 115), sf::Vector2f(108, 8), -30, 0, 0, 0, 0},
+            {WINDOW_STATIC_BOX, sf::Vector2f(70, 115), sf::Vector2f(40, 8), 0, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(330, 115), sf::Vector2f(40, 8), 0, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(10, 240), sf::Vector2f(80, 10), 90, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(390, 240), sf::Vector2f(80, 10), 90, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(290, 115), sf::Vector2f(108, 8), 30, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(110, 115), sf::Vector2f(108, 8), -30, 0, 0, 0, 1},
 
-            {WINDOW_STATIC_BOX, sf::Vector2f(200, 140), sf::Vector2f(60, 10), 0, 0, 0, 0, 1},
-            {WINDOW_STATIC_BOX, sf::Vector2f(105, 170), sf::Vector2f(50, 8), -35, 0, 0, 0, 1},
-            {WINDOW_STATIC_BOX, sf::Vector2f(295, 170), sf::Vector2f(50, 8), 35, 0, 0, 0, 1}
+            {WINDOW_STATIC_BOX, sf::Vector2f(200, 140), sf::Vector2f(60, 10), 0, 0, 0, 0, 0},
+            {WINDOW_STATIC_BOX, sf::Vector2f(105, 170), sf::Vector2f(50, 8), -35, 0, 0, 0, 0},
+            {WINDOW_STATIC_BOX, sf::Vector2f(295, 170), sf::Vector2f(50, 8), 35, 0, 0, 0, 0}
         },
         
         {0, 0}, // mainCirclePosition
@@ -189,13 +191,13 @@ std::vector<LevelData> levelsData = {
         // {200, 150}, // finishWinPosition
         // 0 // finishWinID
 
-        1, // numberOfFinish
-        {sf::Vector2f(200.0, 200.0)}, // finishWinPosition
+        0, // numberOfFinish
+        {}, // finishWinPosition
         {0}, // finishWinID
 
-        0, // numberOfFinishStatic
-        {}, // finishStaticWinPosition
-        {} // finishStaticWinID
+        1, // numberOfFinishStatic
+        {sf::Vector2f(200.0, 200.0)}, // finishStaticWinPosition
+        {0} // finishStaticWinID
      },
     
     // Level 3

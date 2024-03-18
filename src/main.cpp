@@ -127,6 +127,15 @@ int main()
     PortalTextures_struct portalTextures;
     loadPortalTextures(portalTextures);
 
+    // Main circle
+    sf::Texture mainCircleTexture;
+    if (!mainCircleTexture.loadFromFile("assets/imgs/alienGreen_round.png"))
+    {
+        std::cerr << "Error loading texture 'assets/imgs/alienGreen_round.png'" << std::endl;
+        return 1;
+    }
+
+
 
     /* #endregion */
 
@@ -172,7 +181,7 @@ int main()
     std::vector<MyFinish<MyWindow>*> levelFinish;
     std::vector<MyFinish<MyStaticWindow>*> levelFinishStatic;
 
-    MyDynamicCircle* mainCircle = new MyDynamicCircle(sf::Vector2f(200, 200), 20, world, pixPerMeter);
+    MyDynamicCircle* mainCircle = new MyDynamicCircle(sf::Vector2f(200, 200), 20, world, pixPerMeter, mainCircleTexture);
     allLevelDrawables.push_back((MyDrawable*)mainCircle);
     levelDynamicObject.push_back((MyDynamicObject*)mainCircle);
 
@@ -203,9 +212,16 @@ int main()
     // }
 
 
-    MyDynamicBox* box = new MyDynamicBox(sf::Vector2f(350, 100), sf::Vector2f(20, 20), world, pixPerMeter);
-    levelDrawables.push_back((MyDrawable*)box);
-    levelDynamicObject.push_back((MyDynamicObject*)box);
+    // MyDynamicBox* box = new MyDynamicBox(sf::Vector2f(350, 100), sf::Vector2f(20, 20), world, pixPerMeter);
+    // levelDrawables.push_back((MyDrawable*)box);
+    // levelDynamicObject.push_back((MyDynamicObject*)box);
+
+    // MyStaticBox* staticBox = new MyStaticBox(sf::Vector2f(600, 400), sf::Vector2f(20, 20), world, pixPerMeter);
+    // levelDrawables.push_back((MyDrawable*)staticBox);
+
+    // // Put dynamic box on top of the static box
+    // MyDynamicBox* box2 = new MyDynamicBox(sf::Vector2f(600, 380), sf::Vector2f(20, 20), world, pixPerMeter);
+    // levelDrawables.push_back((MyDrawable*)box2);
 
     // // Add a static window
     // MyStaticWindow* staticWindow = new MyStaticWindow(sf::VideoMode(200, 200), "Static window", sf::Style::Titlebar, windowsSettings, sf::Vector2i(100, 100));
@@ -325,8 +341,8 @@ int main()
                     // std::cout << "dynamicObjectPos: " << dynamicObjectPos.x*pixPerMeter << ", " << dynamicObjectPos.y*pixPerMeter << std::endl;
                     if (dynamicObject->body->GetPosition().x*pixPerMeter > winPos.x && dynamicObject->body->GetPosition().x*pixPerMeter < winPos.x+forceFieldWindow->getSize().x && dynamicObject->body->GetPosition().y*pixPerMeter > winPos.y && dynamicObject->body->GetPosition().y*pixPerMeter < winPos.y+forceFieldWindow->getSize().y)
                     {
-                    // std::cout << "Applying force to dynamicObject" << std::endl;
-                        // apply a force to mainCricle
+                        // std::cout << "Applying force to dynamicObject" << std::endl;
+                        dynamicObject->body->SetAwake(true);
                         dynamicObject->body->ApplyForceToCenter(b2Vec2(0.0f+100.0f*dynamicObject->body->GetMass()*std::sin(forceFieldWindow->angle*3.14159/180), -100.0f*dynamicObject->body->GetMass()*std::cos(forceFieldWindow->angle*3.14159/180)), true);
                     }
                 }
@@ -397,6 +413,11 @@ int main()
                 staticWindow->resetPosition();
 
                 staticWindow->clear();
+                
+                //TODO do not run draw on static objects for static windows
+                staticWindow->draw(levelDrawables, pixPerMeter);
+                staticWindow->draw(allLevelDrawables, pixPerMeter);
+
                 //TODO put this in a function
                 for (int i = 0; i < 2; i++)
                 {
@@ -408,9 +429,6 @@ int main()
                         staticWindow->sf::RenderWindow::draw(screwHeadSprite);
                     }
                 }
-                //TODO do not run draw on static objects for static windows
-                staticWindow->draw(levelDrawables, pixPerMeter);
-                staticWindow->draw(allLevelDrawables, pixPerMeter);
                 staticWindow->display();
                 allWindowsClosed = false;
             }

@@ -22,7 +22,10 @@ class MyDynamicCircle : public MyDrawable, public MyDynamicObject
         b2CircleShape CircleShape;
         b2FixtureDef fixtureDef;
 
-        MyDynamicCircle(const sf::Vector2f& screenPosition, const float screenRadius, b2World& world, float pixPerMeter) : posOnWin(0, 0), shape(screenRadius), screenRadius(screenRadius)
+        sf::Sprite sprite;
+        bool usingSprite = false;
+
+        MyDynamicCircle(const sf::Vector2f& screenPosition, const float screenRadius, b2World& world, float pixPerMeter) : posOnWin(0, 0), shape(screenRadius), screenRadius(screenRadius), usingSprite(false)
         {
             shape = sf::CircleShape(screenRadius);
             shape.setFillColor(sf::Color::Blue);
@@ -33,15 +36,45 @@ class MyDynamicCircle : public MyDrawable, public MyDynamicObject
 
             bodyDef.type = b2_dynamicBody;
             bodyDef.position.Set(screenPosition.x/pixPerMeter, screenPosition.y/pixPerMeter);
+            bodyDef.linearDamping = 0.4f;
+            bodyDef.angularDamping = 0.4f;
             body = world.CreateBody(&bodyDef);
+            body->SetSleepingAllowed(false);
 
             CircleShape.m_radius = screenRadius/pixPerMeter;
 
             fixtureDef.shape = &CircleShape;
             fixtureDef.density = 1.0f;
             fixtureDef.friction = 10.3f;
+            fixtureDef.restitution = 0.3f;
 
             body->CreateFixture(&fixtureDef);
+        }
+
+        MyDynamicCircle(const sf::Vector2f& screenPosition, const float screenRadius, b2World& world, float pixPerMeter, sf::Texture& texture) : MyDynamicCircle(screenPosition, screenRadius, world, pixPerMeter)
+        {
+            usingSprite = true;
+
+            sprite = sf::Sprite(texture);
+            sprite.setOrigin(texture.getSize().x/2, texture.getSize().y/2);
+            sprite.setScale(screenRadius*2/texture.getSize().x, screenRadius*2/texture.getSize().y);
+            sprite.setPosition(screenPosition);
+
+            // bodyDef.type = b2_dynamicBody;
+            // bodyDef.position.Set(screenPosition.x/pixPerMeter, screenPosition.y/pixPerMeter);
+            // bodyDef.linearDamping = 0.4f;
+            // bodyDef.angularDamping = 0.4f;
+            // body = world.CreateBody(&bodyDef);
+            // body->SetSleepingAllowed(false);
+
+            // CircleShape.m_radius = screenRadius/pixPerMeter;
+
+            // fixtureDef.shape = &CircleShape;
+            // fixtureDef.density = 1.0f;
+            // fixtureDef.friction = 10.3f;
+            // fixtureDef.restitution = 0.3f;
+
+            // body->CreateFixture(&fixtureDef);
         }
 
         void destroyBody(b2World& world) {
@@ -61,9 +94,15 @@ class MyDynamicCircle : public MyDrawable, public MyDynamicObject
             
             if (posOnWin.x+screenRadius > 0 && posOnWin.x-screenRadius < winSize.x && posOnWin.y+screenRadius > 0 && posOnWin.y-screenRadius < winSize.y)
             {
-                shape.setPosition(posOnWin);
-                shape.setRotation(body->GetAngle()*180/b2_pi);
-                window.draw(shape);
+                if (!usingSprite) {
+                    shape.setPosition(posOnWin);
+                    shape.setRotation(body->GetAngle()*180/b2_pi);
+                    window.draw(shape);
+                } else {
+                    sprite.setPosition(posOnWin);
+                    sprite.setRotation(body->GetAngle()*180/b2_pi);
+                    window.draw(sprite);
+                }
             }
         };
 };
