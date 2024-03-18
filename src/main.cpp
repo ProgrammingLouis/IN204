@@ -16,6 +16,7 @@
 #include "levels_manager.hpp"
 #include "virtual_method_classes.hpp"
 #include "portals.hpp"
+#include "menu.hpp"
 
 
 // Additinal SFML includes
@@ -118,7 +119,6 @@ int main()
 
     // Create a sprite
     auto forceFieldSprite = sf::Sprite(forceFieldTexture);
-    forceFieldSprite.setTexture(forceFieldTexture);
     forceFieldSprite.setOrigin(forceFieldSprite.getLocalBounds().width/2, forceFieldSprite.getLocalBounds().height/2);
     forceFieldSprite.setScale(0.5, 0.5);
 
@@ -128,12 +128,14 @@ int main()
     loadPortalTextures(portalTextures);
 
     // Main circle
+    //TODO have a skin selection in the menu
     sf::Texture mainCircleTexture;
-    if (!mainCircleTexture.loadFromFile("assets/imgs/alienGreen_round.png"))
+    if (!mainCircleTexture.loadFromFile("assets/imgs/alienYellow_round.png"))
     {
-        std::cerr << "Error loading texture 'assets/imgs/alienGreen_round.png'" << std::endl;
+        std::cerr << "Error loading texture 'assets/imgs/alienYellow_round.png'" << std::endl;
         return 1;
     }
+    mainCircleTexture.setSmooth(true);
 
 
 
@@ -154,6 +156,22 @@ int main()
     sound.setVolume(50);
 
     /* #endregion */
+
+
+    Menu menu(sf::VideoMode(600, 400), "Menu", sf::Style::Titlebar, windowsSettings, levelsData.size());
+    // // load quit texture
+    // sf::Texture quitTexture;
+    // if (!quitTexture.loadFromFile("assets/imgs/menu/QuitText.png")) {
+    //     std::cerr << "Error loading texture 'assets/imgs/menu/QuitText.png'" << std::endl;
+    //     return 1;
+    // }
+
+    // sf::Sprite quitSprite;
+    // quitSprite.setTexture(quitTexture);
+
+    // menu.loadSprites();
+    if (menu.loadAssets()) return 1;
+
 
     /* #region Box2D Init */
     b2Vec2 gravity(0.0f, 60.0f);
@@ -450,6 +468,15 @@ int main()
             }
         }
 
+        MenuEvent menuEvent = menu.pollEvents();
+        if (menuEvent == MenuEvent_QUIT) {
+            allWindowsClosed = true;
+            break;
+        }
+        menu.clear();
+        menu.draw();
+        menu.display();
+
         /* #endregion */
         
         // std::cout << "line 423" << std::endl;
@@ -481,8 +508,10 @@ int main()
     }
     std::cout << "Cleared levelDrawables" << std::endl;
     
-    delete mainCircle;
-    delete finish;
+    for (auto& drawable : allLevelDrawables)
+    {
+        delete drawable;
+    }
     std::cout << "Cleared allLevelDrawables" << std::endl;
 
     return 0;
