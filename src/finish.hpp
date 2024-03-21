@@ -28,9 +28,9 @@ class MyFinish<MyWindow> : MyDrawable, MyWindowStaticObject
         sf::Vector2f posOnAttachedWin; // position in the window space of the box center
 
         MyFinish(const sf::Vector2f& winPosition, const sf::Vector2f& screenHalfSize, b2World& world, float pixPerMeter, MyWindow& window) : screenHalfSize(screenHalfSize),
-            leftBox(sf::Vector2f(winPosition.x-screenHalfSize.x+10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, window),
-            bottomBox(sf::Vector2f(winPosition.x, winPosition.y+screenHalfSize.y/2), sf::Vector2f(screenHalfSize.x-20, screenHalfSize.y/2), 0, world, pixPerMeter, window),
-            rightBox(sf::Vector2f(winPosition.x+screenHalfSize.x-10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, window)
+            leftBox(sf::Vector2f(winPosition.x-screenHalfSize.x+10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, &window),
+            bottomBox(sf::Vector2f(winPosition.x, winPosition.y+screenHalfSize.y/2), sf::Vector2f(screenHalfSize.x-20, screenHalfSize.y/2), 0, world, pixPerMeter, &window),
+            rightBox(sf::Vector2f(winPosition.x+screenHalfSize.x-10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, &window)
         {
             leftBox.shape.setFillColor(sf::Color::Red);
             bottomBox.shape.setFillColor(sf::Color::Blue);
@@ -93,9 +93,9 @@ class MyFinish<MyStaticWindow> : MyDrawable
         sf::Vector2f posOnAttachedWin; // position in the window space of the box center
 
         MyFinish(const sf::Vector2f& winPosition, const sf::Vector2f& screenHalfSize, b2World& world, float pixPerMeter, MyStaticWindow& window) : screenHalfSize(screenHalfSize),
-            leftBox(sf::Vector2f(winPosition.x-screenHalfSize.x+10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, window),
-            bottomBox(sf::Vector2f(winPosition.x, winPosition.y+screenHalfSize.y/2), sf::Vector2f(screenHalfSize.x-20, screenHalfSize.y/2), 0, world, pixPerMeter, window),
-            rightBox(sf::Vector2f(winPosition.x+screenHalfSize.x-10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, window)
+            leftBox(sf::Vector2f(winPosition.x-screenHalfSize.x+10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, &window),
+            bottomBox(sf::Vector2f(winPosition.x, winPosition.y+screenHalfSize.y/2), sf::Vector2f(screenHalfSize.x-20, screenHalfSize.y/2), 0, world, pixPerMeter, &window),
+            rightBox(sf::Vector2f(winPosition.x+screenHalfSize.x-10, winPosition.y), sf::Vector2f(10, screenHalfSize.y), 0, world, pixPerMeter, &window)
         {
             leftBox.shape.setFillColor(sf::Color::Red);
             bottomBox.shape.setFillColor(sf::Color::Blue);

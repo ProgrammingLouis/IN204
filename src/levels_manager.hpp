@@ -230,7 +230,7 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
         {
             if (drawableData.windowID < levelData.numberOfWindows)
             {
-                auto winStaticBox = new MyWindowStaticBox<MyWindow>(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, *windows_struct->windows[drawableData.windowID]);
+                auto winStaticBox = new MyWindowStaticBox<MyWindow>(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, windows_struct->windows[drawableData.windowID]);
                 gameObjects_struct->drawables->push_back((MyDrawable*)winStaticBox);
                 gameObjects_struct->windowStaticObjects->push_back((MyWindowStaticObject*)winStaticBox);
                 continue;
@@ -238,7 +238,7 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
 
             if (drawableData.windowID < levelData.numberOfWindows + levelData.numberOfStaticWindows)
             {
-                auto winStaticBox = new MyWindowStaticBox<MyStaticWindow>(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, *windows_struct->staticWindows[drawableData.windowID - levelData.numberOfWindows]);
+                auto winStaticBox = new MyWindowStaticBox<MyStaticWindow>(drawableData.position, drawableData.size, drawableData.angle, world, pixPerMeter, windows_struct->staticWindows[drawableData.windowID - levelData.numberOfWindows]);
                 gameObjects_struct->drawables->push_back((MyDrawable*)winStaticBox);
                 //! We do not add the window static object to the windowStaticObjects vector because we do not want to update the position of the static windows
                 continue;
@@ -273,17 +273,17 @@ void loadLevel(int levelID, struct gameObjects* gameObjects_struct, struct windo
                 auto staticBox = new MyStaticBox(screenPosition, drawableData.size, world, pixPerMeter);
                 gameObjects_struct->drawables->push_back((MyDrawable*)staticBox);
             }
-            else if (drawableData.type == DYNAMIC_BOX)
+            else if (drawableData.type == WINDOW_DYNAMIC_BOX || drawableData.type == DYNAMIC_BOX)
             {
                 auto dynamicBox = new MyDynamicBox(screenPosition, drawableData.size, world, pixPerMeter);
                 gameObjects_struct->drawables->push_back((MyDrawable*)dynamicBox);
-                gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicBox);
+                if (drawableData.type == WINDOW_DYNAMIC_BOX) gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicBox);
             }
-            else if (drawableData.type == DYNAMIC_CIRCLE)
+            else if (drawableData.type == WINDOW_DYNAMIC_CIRCLE || drawableData.type == DYNAMIC_CIRCLE)
             {
                 auto dynamicCircle = new MyDynamicCircle(screenPosition, drawableData.size.x, world, pixPerMeter);
                 gameObjects_struct->drawables->push_back((MyDrawable*)dynamicCircle);
-                gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicCircle);
+                if (drawableData.type == WINDOW_DYNAMIC_CIRCLE) gameObjects_struct->levelDynamicObject->push_back((MyDynamicObject*)dynamicCircle);
             }
             else
             {

@@ -8,8 +8,10 @@
 enum MyDrawableType {
     WINDOW_STATIC_BOX,
     STATIC_BOX,
+    WINDOW_DYNAMIC_BOX,
+    WINDOW_DYNAMIC_CIRCLE,
     DYNAMIC_BOX,
-    DYNAMIC_CIRCLE
+    DYNAMIC_CIRCLE,
     // FINISH
 };
 
@@ -86,7 +88,7 @@ std::vector<LevelData> levelsData = {
             {WINDOW_STATIC_BOX, sf::Vector2f(290, 210), sf::Vector2f(60, 10), 10, 0, 0, 0, 0},
             {WINDOW_STATIC_BOX, sf::Vector2f(170, 150), sf::Vector2f(40, 10), 0, 0, 0, 0, 1},
             {WINDOW_STATIC_BOX, sf::Vector2f(260, 160), sf::Vector2f(60, 10), 10, 0, 0, 0, 1},
-            {DYNAMIC_BOX, sf::Vector2f(185, 120), sf::Vector2f(30, 30), 0, 0, 0, 0, 1} // Dynamic box on top of second window static box
+            {WINDOW_DYNAMIC_BOX, sf::Vector2f(185, 120), sf::Vector2f(30, 30), 0, 0, 0, 0, 1} // Dynamic box on top of second window static box
 
         },
 
@@ -202,7 +204,6 @@ std::vector<LevelData> levelsData = {
     
     // Level 3
     // Two static windows add one force field window
-
     {
         0, // numberOfWindows
 
@@ -327,40 +328,62 @@ std::vector<LevelData> levelsData = {
         0, // numberOfFinishStatic
         {}, // finishStaticWinPosition
         {} // finishStaticWinID
-    }
+    },
 
-//     // New level 3
-//     {
-//         3, // numberOfWindows
+    // Level 6
+    {
+        1, // numberOfWindows
 
-//         // videoModes
-//         {sf::VideoMode(400, 300), sf::VideoMode(400, 300), sf::VideoMode(400, 300)},
+        // videoModes
+        {sf::VideoMode(300, 250)},
 
-//         // windowPositions
-//         {sf::Vector2i(100, 400), sf::Vector2i(800, 200), sf::Vector2i(800, 400)},
+        // windowPositions
+        {sf::Vector2i(50, 400)},
 
-//         0, // numberOfStaticWindows
-//         // {sf::VideoMode(200, 150), sf::VideoMode(400, 300)},
-//         // {sf::Vector2i(50, 50), sf::Vector2i(600, 700)},
-//         {}, // staticVideoModes
-//         {}, // staticWindowPositions
+        1, // numberOfStaticWindows
+        {sf::VideoMode(500, 250)}, // staticVideoModes
+        {sf::Vector2i(1680-500-50, 400)}, // staticWindowPositions
 
-//         0, // numberOfForceFieldWindows
-//         {}, // forceFieldVideoModes
-//         {}, // forceFieldWindowPositions
+        0, // numberOfForceFieldWindows
+        {}, // forceFieldVideoModes
+        {}, // forceFieldWindowPositions
+        {}, // forceFieldAngles
 
-//         // drawablesData 
-//         {
-//             {WINDOW_STATIC_BOX, sf::Vector2f(200, 200), sf::Vector2f(60, 10), 0, 0, 0, 0, 1},
-//             // {WINDOW_STATIC_BOX, sf::Vector2f(295, 115), sf::Vector2f(50, 8), -35, 0, 0, 0, 1},
-//             // {WINDOW_STATIC_BOX, sf::Vector2f(105, 115), sf::Vector2f(50, 8), 35, 0, 0, 0, 1}
-//         },
+        // drawablesData
+        // drawablesData format :
+        // {type, position, size, angle, density, friction, restitution, windowID}
+        {
+            // WINDOW_STATIC_BOX in the middle of window 0
+            {WINDOW_STATIC_BOX, sf::Vector2f(150, 150), sf::Vector2f(110, 10), 0, 0, 0, 0, 0},
+            // WINDOW_STATIC_BOX in the middle of window 1
+            {WINDOW_STATIC_BOX, sf::Vector2f(80, 150), sf::Vector2f(90, 10), 0, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(190, 60), sf::Vector2f(200, 10), 0, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(400, 115), sf::Vector2f(10, 65), 0, 0, 0, 0, 1},
+            {WINDOW_STATIC_BOX, sf::Vector2f(240, 220), sf::Vector2f(70, 10), 0, 0, 0, 0, 1},
+
+            {STATIC_BOX, sf::Vector2f(500, 500), sf::Vector2f(20, 20), 0, 0, 0, 0, -1},
+            {DYNAMIC_BOX, sf::Vector2f(500, 480), sf::Vector2f(20, 20), 0, 0, 0, 0, -1},
+
+            {STATIC_BOX, sf::Vector2f(800, 300), sf::Vector2f(20, 20), 0, 0, 0, 0, -1},
+            {DYNAMIC_BOX, sf::Vector2f(800, 230), sf::Vector2f(70, 70), 0, 0, 0, 0, -1},
+
+            {STATIC_BOX, sf::Vector2f(1000, 900), sf::Vector2f(20, 20), 0, 0, 0, 0, -1},
+            {DYNAMIC_BOX, sf::Vector2f(1000, 875), sf::Vector2f(30, 30), 0, 0, 0, 0, -1},
+        },
         
-//         {0, 0}, // mainCirclePosition
-//         0, // mainCirclePlacedOn
-//         {200, 150}, // finishWinPosition
-//         0 // finishWinID
-//      }
+        {0, 0}, // mainCirclePosition
+        0, // mainCirclePlacedOn
+        // {200, 150}, // finishWinPosition
+        // 0 // finishWinID
+
+        0, // numberOfFinish
+        {}, // finishWinPosition
+        {}, // finishWinID
+
+        1, // numberOfFinishStatic
+        {sf::Vector2f(350, 160)}, // finishStaticWinPosition
+        {0} // finishStaticWinID
+    }
 };
 
 

@@ -26,7 +26,7 @@
 
 std::map<sf::Keyboard::Key, bool> keysPressed;
 
-int main()
+int main(int argc, char** argv)
 {
     //TODO Add cheat alert rules
 
@@ -46,7 +46,10 @@ int main()
     windowsSettings.antialiasingLevel = 8;
 
     int currentLevel = 0;
-
+    //TODO delete this for final game
+    if (argc > 1) {
+        currentLevel = std::stoi(argv[1]);
+    }
 
     std::vector<MyWindow*> windows;
     std::vector<MyStaticWindow*> staticWindows;
@@ -193,8 +196,8 @@ int main()
     /* #region objects definitions */
 
     std::vector<MyDrawable*> levelDrawables;
-    std::vector<MyWindowStaticObject*> levelWindowStaticObjects;  //! For objects that need to move with their window, hence who have the updatePositionIfDrag() method
     std::vector<MyDrawable*> allLevelDrawables; //TODO this is only used for the main circle, maybe delete it
+    std::vector<MyWindowStaticObject*> levelWindowStaticObjects;  //! For objects that need to move with their window, hence who have the updatePositionIfDrag() method
     std::vector<MyDynamicObject*> levelDynamicObject; //TODO use this or delete it, and clear it in the levels_manager
     std::vector<MyFinish<MyWindow>*> levelFinish;
     std::vector<MyFinish<MyStaticWindow>*> levelFinishStatic;
@@ -258,6 +261,8 @@ int main()
     int frameCount = 0;
     while (!allWindowsClosed)
     {
+        //TODO Verify functions order here for the main loop
+
         // std::cout << "Frame " << frameCount << std::endl;
 
         //!! Don't delete this
@@ -286,6 +291,7 @@ int main()
             {
                 forceFieldWindow->close();
             }
+            menu.close();
         }
         //TODO delete this for final game
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
@@ -330,17 +336,8 @@ int main()
         }
 
         // std::cout << "line 291" << std::endl;
-        //!!
-        //TODO change this because window static objects that are in a static window do not need to be updated
-        for (auto& winStaticObject : levelWindowStaticObjects)
-        {
-            winStaticObject->updatePositionIfDrag(pixPerMeter);
-        }
-        // finish->updatePositionIfDrag(pixPerMeter);
-        for (auto& finish : levelFinish)
-        {
-            finish->updatePositionIfDrag(pixPerMeter);
-        }
+        
+        
 
         // std::cout << "line 304" << std::endl;
 
@@ -412,6 +409,21 @@ int main()
             if (window->getIsDragging()) {
                 window->setPosition(window->newPos);
             }
+        }
+
+        //TODO change this because window static objects that are in a static window do not need to be updated
+        for (auto& winStaticObject : levelWindowStaticObjects)
+        {
+            winStaticObject->updatePositionIfDrag(pixPerMeter);
+        }
+        // finish->updatePositionIfDrag(pixPerMeter);
+        for (auto& finish : levelFinish)
+        {
+            finish->updatePositionIfDrag(pixPerMeter);
+        }
+
+        for (auto& window : windows)
+        {
 
             if (window->isOpen()) {
                 window->clear();
@@ -473,9 +485,18 @@ int main()
             allWindowsClosed = true;
             break;
         }
-        menu.clear();
-        menu.draw();
-        menu.display();
+        else if (menuEvent == MenuEvent_LEVEL_SELECTED) {
+            menu.close();
+            currentLevel = menu.selectedLevel;
+            loadLevel(currentLevel, &gameObjectsStruct, &windows_struct, world, pixPerMeter);
+        }
+
+        if (menu.isOpen()) {
+            menu.clear();
+            menu.draw();
+            menu.display();
+            allWindowsClosed = false;
+        }
 
         /* #endregion */
         

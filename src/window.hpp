@@ -10,15 +10,20 @@ int windowsCount = 0; //FOR DEBUGGING
 class MyWindowBase : public sf::RenderWindow
 {
     protected:
-        std::map<sf::Event::EventType, std::function<void(sf::Event)>> eventHandlers;
+        std::map<
+            sf::Event::EventType,
+            std::function<void(sf::Event)>>
+        eventHandlers;
+
     public:
         MyWindowBase(const sf::VideoMode& videoMode, const std::string& title, sf::Uint32 style, const sf::ContextSettings& settings) : sf::RenderWindow(videoMode, title, style, settings)
         {
             setVerticalSyncEnabled(true);
 
-            eventHandlers[sf::Event::Closed] = [this](sf::Event event) {
-                close();
-            };
+            eventHandlers[sf::Event::Closed] =
+                [this](sf::Event event) {
+                    close();
+                };
         }
 
         void draw(std::vector<MyDrawable*> drawables, float pixPerMeter) {
@@ -32,7 +37,8 @@ class MyWindowBase : public sf::RenderWindow
         void pollEvents() {
             for (auto event = sf::Event{}; sf::RenderWindow::pollEvent(event);)
             {
-                if (eventHandlers.find(event.type) != eventHandlers.end()) eventHandlers[event.type](event);
+                if (eventHandlers.find(event.type) != eventHandlers.end())
+                    eventHandlers[event.type](event);
             }
         }
 };
@@ -73,7 +79,8 @@ class MyDraggableWindow : public MyWindowBase
 
         MyDraggableWindow(const sf::VideoMode& videoMode, const std::string& title, sf::Uint32 style, const sf::ContextSettings& settings) : MyWindowBase(videoMode, title, style, settings)
         {
-            windowID = windowsCount++; //FOR DEBUGGING
+            windowID = windowsCount++; //FOR DEBUGGING``
+
             eventHandlers[sf::Event::MouseButtonPressed] = [this](sf::Event event) {
                 if (event.mouseButton.button != sf::Mouse::Button::Left) return;
                 startDragWindowPos = getPosition();
@@ -82,6 +89,7 @@ class MyDraggableWindow : public MyWindowBase
                 isDraggingFocus = false;
                 startedDragging = true;
             };
+            
             eventHandlers[sf::Event::MouseButtonReleased] = [this](sf::Event event) {
                 if (event.mouseButton.button != sf::Mouse::Button::Left) return;
                 isDragging = false;
